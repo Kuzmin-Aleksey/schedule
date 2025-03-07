@@ -9,7 +9,7 @@ import (
 	"os/signal"
 	"schedule/config"
 	"schedule/internal/controller/httphandler"
-	"schedule/internal/data/repo/mysql"
+	mysql2 "schedule/internal/repository/mysql"
 	"schedule/internal/usecase/schedule"
 	"schedule/pkg/logger"
 	"syscall"
@@ -25,13 +25,13 @@ func Run(cfg *config.Config) {
 	shutdown := make(chan os.Signal, 2)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
-	db, err := mysql.Connect(cfg.Db)
+	db, err := mysql2.Connect(cfg.Db)
 	if err != nil {
 		l.Fatal(err)
 	}
 	defer db.Close()
 
-	scheduleRepo := mysql.NewScheduleRepo(db)
+	scheduleRepo := mysql2.NewScheduleRepo(db)
 	if err := scheduleRepo.Migrate(); err != nil {
 		l.Fatal("migrate failed: ", err)
 	}
