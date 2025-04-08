@@ -19,16 +19,14 @@ func InsertFunc[S ~[]E, E any](s S, v E, f func(E) bool) S {
 }
 
 func ParseInt(s string) (int, bool) {
-	parseIntOk := true
 	var durInt int
 	for _, r := range s {
 		if r < '0' || r > '9' {
-			parseIntOk = false
-			break
+			return 0, false
 		}
 		durInt = durInt*10 + int(r-'0')
 	}
-	return durInt, parseIntOk
+	return durInt, true
 }
 
 func ParseTimezone(s string) (*time.Location, error) {
