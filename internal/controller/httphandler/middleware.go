@@ -25,7 +25,7 @@ func (r *CustomWriter) Write(p []byte) (int, error) {
 	return n, err
 }
 
-func (h *Handler) MwLogging(next http.Handler) http.Handler {
+func (h *Handler) mwLogging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		customWriter := &CustomWriter{
 			ResponseWriter: w,
@@ -40,7 +40,7 @@ func (h *Handler) MwLogging(next http.Handler) http.Handler {
 	})
 }
 
-func (h *Handler) MwWithLocation(next http.HandlerFunc) http.HandlerFunc {
+func (h *Handler) mwWithLocation(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		locHeader := r.Header.Get("TZ")
 		var loc *time.Location

@@ -20,7 +20,7 @@ func NewHandler(l *logger.Logger) *Handler {
 		l:   l,
 	}
 
-	h.rtr.Use(h.MwLogging)
+	h.rtr.Use(h.mwLogging)
 
 	return h
 }
@@ -29,9 +29,9 @@ func (h *Handler) SetScheduleRoutes(schedule *schedule.Usecase) {
 	h.schedule = schedule
 
 	h.rtr.HandleFunc("/schedule", h.createSchedule).Methods("POST")
-	h.rtr.HandleFunc("/schedule", h.MwWithLocation(h.getSchedule)).Methods("GET")
-	h.rtr.HandleFunc("/schedules", h.MwWithLocation(h.getUserSchedules)).Methods("GET")
-	h.rtr.HandleFunc("/next_taking", h.MwWithLocation(h.scheduleGetNextTakings)).Methods("GET")
+	h.rtr.HandleFunc("/schedule", h.mwWithLocation(h.getSchedule)).Methods("GET")
+	h.rtr.HandleFunc("/schedules", h.mwWithLocation(h.getUserSchedules)).Methods("GET")
+	h.rtr.HandleFunc("/next_taking", h.mwWithLocation(h.scheduleGetNextTakings)).Methods("GET")
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
