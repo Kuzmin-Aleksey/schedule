@@ -48,11 +48,11 @@ func interceptorLog(l *logger.Logger) logging.Logger {
 
 		switch level {
 		case logging.LevelDebug, logging.LevelInfo:
-			l.Debug(args)
+			l.Debug(args...)
 		case logging.LevelWarn:
-			l.Warn(args)
+			l.Warn(args...)
 		case logging.LevelError:
-			l.Error(args)
+			l.Error(args...)
 		}
 	})
 }
