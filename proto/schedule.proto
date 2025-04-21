@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package schedule;
+
+option go_package = "schedule.v1;schedulev1";
+
+service Schedule {
+  rpc CreateSchedule(CreateScheduleRequest) returns (CreateScheduleReply);
+  rpc GetTimetable(GetTimetableRequest) returns (GetTimetableReply);
+  rpc GetByUser(GetByUserRequest) returns (GetByUserReply);
+  rpc GetNextTakings(GetNextTakingsRequest) returns (GetNextTakingsReply);
+}
+
+
+message CreateScheduleRequest {
+  int64  userId = 1;
+  string name = 2;
+  uint32 duration = 3;
+  int64  period = 4;
+}
+
+message CreateScheduleReply {
+  int32 id = 1;
+}
+
+message GetTimetableRequest {
+  int64 userId = 1;
+  int32 scheduleId = 2;
+}
+
+message GetTimetableReply {
+  string         name = 1;
+  int64          endAt = 2;
+  int64          period = 3;
+  repeated int64 timetable = 4;
+}
+
+message GetByUserRequest {
+  int64 userId = 1;
+}
+
+message GetByUserReply {
+  repeated int32 scheduleIds = 1;
+}
+
+
+message GetNextTakingsRequest {
+  int64 userId = 1;
+}
+
+message GetNextTakingsReply {
+  repeated GetNextTakingsReplyItem items = 1;
+}
+
+message GetNextTakingsReplyItem {
+  int32 id = 1;
+  string name = 2;
+  int64 endAt = 3;
+  int64 period = 4;
+  int64 nextTaking = 5;
+}
+

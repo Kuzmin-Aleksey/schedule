@@ -10,6 +10,7 @@ type Config struct {
 	Log        LogConfig        `yaml:"log"`
 	Db         DbConfig         `yaml:"db"`
 	HttpServer HttpServerConfig `yaml:"http_server"`
+	GrpcServer GrpcServerConfig `yaml:"grpc_server"`
 }
 
 type ScheduleConfig struct {
@@ -37,6 +38,10 @@ type HttpServerConfig struct {
 	ReadTimeout     time.Duration `yaml:"read_timeout" env:"HTTP_READ_TIMEOUT" env-default:"10s"`
 	WriteTimeout    time.Duration `yaml:"write_timeout" env:"HTTP_WRITE_TIMEOUT" env-default:"10s"`
 	ShutdownTimeout time.Duration `yaml:"shutdown_timeout" env:"HTTP_SHUTDOWN_TIMEOUT" env-default:"10s"`
+}
+
+type GrpcServerConfig struct {
+	Addr string `yaml:"addr" env:"GRPC_ADDR" env-default:"localhost:8081"`
 }
 
 func ReadConfig(path string) (*Config, error) {

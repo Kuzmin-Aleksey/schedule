@@ -7,6 +7,11 @@ import (
 	"schedule/internal/app"
 )
 
+// @title Schedule API
+// @version 1.0
+// @description
+// @BasePath /api
+
 func main() {
 	configPath := "config/config.yaml"
 	if len(os.Args) > 1 {

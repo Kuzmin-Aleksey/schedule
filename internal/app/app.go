@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"schedule/config"
-	"schedule/internal/controller/httphandler"
 	mysqlRepo "schedule/internal/repository/mysql"
 	"schedule/internal/usecase/schedule"
 	"schedule/pkg/logger"
@@ -38,26 +38,31 @@ func Run(cfg *config.Config) {
 
 	scheduleUsecase := schedule.NewUsecase(scheduleRepo, cfg.Schedule)
 
-	handler := httphandler.NewHandler(l)
-	handler.SetScheduleRoutes(scheduleUsecase)
-
-	server := &http.Server{
-		Handler:      handler,
-		Addr:         cfg.HttpServer.Addr,
-		ReadTimeout:  cfg.HttpServer.ReadTimeout,
-		WriteTimeout: cfg.HttpServer.WriteTimeout,
-		ErrorLog:     log.New(l.Out, "", log.Ldate|log.Ltime),
-	}
+	httpServer := newHttpServer(l, scheduleUsecase, cfg.HttpServer)
+	grpcServer := NewGrpcServer(l, scheduleUsecase)
 
 	go func() {
-		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			l.Fatal(err)
+		}
+	}()
+
+	go func() {
+		listener, err := net.Listen("tcp", cfg.GrpcServer.Addr)
+		if err != nil {
+			l.Fatal(err)
+		}
+
+		if err := grpcServer.Serve(listener); err != nil {
 			l.Fatal(err)
 		}
 	}()
 
 	<-shutdown
 
-	if err := server.Shutdown(context.Background()); err != nil {
-		l.Error("shutdown server failed:", err)
+	if err := httpServer.Shutdown(context.Background()); err != nil {
+		l.Error("shutdown http server failed:", err)
 	}
+
+	grpcServer.GracefulStop()
 }

@@ -11,7 +11,7 @@ type CreateScheduleDTO struct {
 	UserId   int64             `json:"user_id"`
 	Name     string            `json:"name"`
 	Duration uint              `json:"duration"` // days
-	Period   util.JsonDuration `json:"period"`
+	Period   util.JsonDuration `json:"period" swaggertype:"string" example:"1h30m"`
 }
 
 func (dto *CreateScheduleDTO) Validate() error {
@@ -38,15 +38,15 @@ type CreateScheduleResponseDTO struct {
 type ScheduleResponseDTO struct {
 	Id        int               `json:"id"`
 	Name      string            `json:"name"`
-	EndAt     *time.Time        `json:"end_at,omitempty"`
-	Period    util.JsonDuration `json:"period"`
-	Timetable []time.Time       `json:"timetable"`
+	EndAt     *time.Time        `json:"end_at,omitempty" example:"2025-04-21T22:00:00Z"`
+	Period    util.JsonDuration `json:"period" swaggertype:"string" example:"1h30m"`
+	Timetable []time.Time       `json:"timetable" example:"2025-04-21T08:00:00Z"`
 }
 
 type NextTakingResponseDTO struct {
 	Id         int               `json:"id"`
 	Name       string            `json:"name"`
-	EndAt      *time.Time        `json:"end_at,omitempty"`
-	Period     util.JsonDuration `json:"period"`
-	NextTaking time.Time         `json:"next_taking"`
+	EndAt      *time.Time        `json:"end_at,omitempty" example:"2025-04-21T22:00:00Z"`
+	Period     util.JsonDuration `json:"period" swaggertype:"string" example:"1h30m"`
+	NextTaking time.Time         `json:"next_taking" example:"2025-04-21T08:00:00Z"`
 }

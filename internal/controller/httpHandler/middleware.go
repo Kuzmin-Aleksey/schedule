@@ -1,4 +1,4 @@
-package httphandler
+package httpHandler
 
 import (
 	"fmt"

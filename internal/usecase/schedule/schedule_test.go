@@ -140,6 +140,8 @@ func TestGetSchedule(t *testing.T) {
 			},
 		},
 	}
+	b, _ := expected[0].Timetable[0].MarshalJSON()
+	t.Log(string(b), "-----------")
 
 	r := mocks.NewRepo(t)
 	uc := NewUsecase(r, testConfig)
