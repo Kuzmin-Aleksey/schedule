@@ -1,3 +1,4 @@
+basePath: /api
 definitions:
   httpHandler.errorResponse:
     properties:
@@ -59,6 +60,8 @@ definitions:
     type: object
 info:
   contact: {}
+  title: Schedule API
+  version: "1.0"
 paths:
   /next_taking:
     get:
