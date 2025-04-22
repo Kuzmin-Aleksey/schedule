@@ -1,10 +1,10 @@
-    Задание 2
+Задание 2
 
 create table developers
 (
 	id            uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
 	name          text,
-	department   text,
+	department    text,
 	geolocation   point,
 	last_known_ip inet,
 	is_available  boolean
