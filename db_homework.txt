@@ -1,0 +1,112 @@
+    Задание 2
+
+create table developers
+(
+	id            uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+	name          text,
+	department   text,
+	geolocation   point,
+	last_known_ip inet,
+	is_available  boolean
+)
+
+Задние 3
+
+"b02f19f9-0398-4b3e-b4c7-faeb96fc2393"	"James"	"backend"	"(54.713303,20.454894)"	"127.0.0.1"	true
+"cbe8079a-23a1-48c5-8015-339a9f7c0814"	"James Smith"	"backend"	"(54.713303,20.454894)"	"8.8.8.8"	true
+"52c32810-57c1-4a2b-8e07-34aa0f42bfe2"	"Mary Johnson"	"backend"	"(54.715112,20.449876)"	"1.1.1.1"	false
+"8c3ba2b1-78a8-4100-8df1-9be5dafcb218"	"John Williams"	"ios"	"(54.710945,20.462345)"	"104.16.132.229"	false
+"9e4ab3f6-7be6-44ae-92fd-efcfa9ae8209"	"Patricia Brown"	"android"	"(54.708754,20.458932)"	"172.217.22.14"	true
+"39516dcb-ed0c-4b5f-9aa8-572184f0db87"	"Robert Jones"	"frontend"	"(54.716543,20.451267)"	"93.184.216.34"	false
+"290b3c5b-cb99-45cf-a6c1-7385db5235e2"	"James Jones"	"ios"	"(54.712409,20.447618)"	"203.0.113.5"	true
+"06548660-afa8-4801-98f0-eb2e8b18d356"	"Mary Brown"	"backend"	"(54.719834,20.453219)"	"198.51.100.1"	true
+"21df7de0-7795-4ff5-830f-28960c5c73cf"	"John Williams"	"frontend"	"(54.705672,20.460154)"	"192.0.2.123"	false
+"a33fa156-01d1-455e-bfa5-65d05b38e9ef"	"Patricia Johnson"	"android"	"(54.707891,20.455687)"	"45.33.32.156"	true
+"cf1278e0-b61c-43e8-92e4-52e67bf2b6f2"	"Robert Smith "	"backend"	"(54.714576,20.448912)"	"64.233.160.0"	true
+"c26a35fa-50a1-445d-9c53-129cb12fe13b"	"John Williams"	"android"	"(54.709328,20.463401)"	"74.125.24.94"	true
+"868e59ed-dcbe-4417-a281-c214753a5b8a"	"James Smith"	"frontend"	"(54.718245,20.456782)"	"185.199.108.154"	false
+"f704a2b2-6edb-4c6d-a751-13ded5e33c43"	"Mary Jones"	"backend"	"(54.706754,20.452963)"	"140.82.121.3"	false
+"96d4f6bf-be36-47f0-9c68-1c7827fb227b"	"Robert Johnson"	"ios"	"(54.711237,20.459674)"	"151.101.1.69"	true
+"d09449ee-131b-465d-9116-ccd115ac6b2a"	"Patricia Brown"	"ios"	"(54.720156,20.449035)"	"35.186.238.101"	true
+"ac33e035-127c-42d3-aecd-ca715e6e1bb4"	"Mary Jones"	"android"	"(54.704512,20.457823)"	"94.140.14.14"	false
+"47b6da88-585e-4fc5-ba50-afd77cc0b113"	"Robert Johnson"	"backend"	"(54.717389,20.454601)"	"23.211.132.202"	true
+"cf3b6027-b86f-444b-9a7d-ece9bb6f1c70"	"John Brown"	"android"	"(54.713874,20.461289)"	"52.114.128.10"	false
+"b2fedcea-73c7-475b-8164-cff6974375c1"	"James Williams"	"backend"	"(54.708146,20.448765)"	"69.63.181.15"	true
+"32169409-c044-4366-b90f-381773b3681a"	"Patricia Smith "	"frontend"	"(54.715983,20.457432)"	"208.80.153.224"	true
+
+
+Задание 3 со звёздочкой
+https://github.com/Kuzmin-Aleksey/schedule/blob/master/db_homework.sql
+
+Задание 4
+
+EXPLAIN SELECT * FROM developers WHERE name LIKE 'James%';
+    Seq Scan on developers  (cost=0.00..369.00 rows=1981 width=60)
+
+EXPLAIN SELECT * FROM developers WHERE department = 'backend';
+    Seq Scan on developers  (cost=0.00..369.00 rows=2479 width=60)
+
+EXPLAIN SELECT * FROM developers WHERE last_known_ip = '192.168.1.10';
+    Seq Scan on developers  (cost=0.00..369.00 rows=1 width=60)
+
+EXPLAIN SELECT * FROM developers WHERE is_available = TRUE;
+    Seq Scan on developers  (cost=0.00..344.00 rows=4975 width=60)
+
+Задание 4 со звёздочкой
+
+Для удобной работы с координатами изменяем тип Point на geography:
+ALTER TABLE developers ALTER COLUMN geolocation TYPE geography USING ST_SetSRID(ST_MakePoint(geolocation[1], geolocation[0]), 4326);
+
+EXPLAIN SELECT * FROM developers WHERE ST_DWithin(geolocation, ST_SetSRID(ST_MakePoint(20.509215, 54.708088), 4326), 10000);
+    Seq Scan on developers  (cost=0.00..251.20 rows=1 width=76)
+
+
+Задание 5
+
+Для колонки name:
+    CREATE EXTENSION pg_trgm;
+    CREATE INDEX name_idx ON developers USING gin (name gin_trgm_ops);
+
+Для колонки department:
+    CREATE INDEX department_idx ON developers (department);
+
+Для колонки last_known_ip:
+    CREATE INDEX last_known_ip_idx ON developers USING gist (last_known_ip inet_ops);
+
+Для колонки geolocation с типом geography:
+    CREATE INDEX geolocation_idx ON developers USING gist (geolocation)
+
+Для колонки is_available.
+      CREATE INDEX is_available_idx ON developers (is_available);
+      ! Подойдет только при неравномерном распределении значений true и false
+
+
+Задание 6
+
+EXPLAIN SELECT * FROM developers WHERE name LIKE 'James%';
+    "Bitmap Heap Scan on developers  (cost=57.81..326.58 rows=1981 width=60)"
+    "  Recheck Cond: (name ~~ 'James%'::text)"
+    "  ->  Bitmap Index Scan on name_idx  (cost=0.00..57.32 rows=1981 width=0)"
+    "        Index Cond: (name ~~ 'James%'::text)"
+
+EXPLAIN SELECT * FROM developers WHERE department = 'backend';
+    "Bitmap Heap Scan on developers  (cost=31.50..306.48 rows=2479 width=60)"
+    "  Recheck Cond: (department = 'backend'::text)"
+    "  ->  Bitmap Index Scan on department_idx  (cost=0.00..30.88 rows=2479 width=0)"
+    "        Index Cond: (department = 'backend'::text)"
+
+EXPLAIN SELECT * FROM developers WHERE last_known_ip = '192.168.1.10';
+    "Index Scan using last_known_ip_idx on developers  (cost=0.15..8.17 rows=1 width=60)"
+    "  Index Cond: (last_known_ip = '192.168.1.10'::inet)"
+
+EXPLAIN SELECT * FROM developers WHERE ST_DWithin(geolocation, ST_SetSRID(ST_MakePoint(20.509215, 54.708088), 4326), 10000);
+    "Index Scan using geolocation_idx on developers  (cost=0.26..20.77 rows=1 width=76)"
+    "  Index Cond: (geolocation && _st_expand('0101000020E6100000F5A10BEA5B8234405358A9A0A25A4B40'::geography, '10000'::double precision))"
+    "  Filter: st_dwithin(geolocation, '0101000020E6100000F5A10BEA5B8234405358A9A0A25A4B40'::geography, '10000'::double precision, true)"
+
+EXPLAIN SELECT * FROM developers WHERE is_available = TRUE;
+    "Bitmap Heap Scan on developers  (cost=27.93..375.79 rows=986 width=60)"
+    "  Recheck Cond: is_available"
+    "  ->  Bitmap Index Scan on is_available_idx  (cost=0.00..27.68 rows=986 width=0)"
+    "        Index Cond: (is_available = true)"
+
