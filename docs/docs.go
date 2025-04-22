@@ -35,6 +35,13 @@ const docTemplate = `{
                         "name": "user_id",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "+00:00",
+                        "description": "timezone",
+                        "name": "TZ",
+                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -76,6 +83,13 @@ const docTemplate = `{
                 ],
                 "summary": "Get schedule",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "default": "+00:00",
+                        "description": "timezone",
+                        "name": "TZ",
+                        "in": "header"
+                    },
                     {
                         "type": "integer",
                         "description": "user id",
@@ -177,6 +191,13 @@ const docTemplate = `{
                         "name": "user_id",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "+00:00",
+                        "description": "timezone",
+                        "name": "TZ",
+                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -299,7 +320,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "",
-	BasePath:         "/api",
+	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Schedule API",
 	Description:      "",

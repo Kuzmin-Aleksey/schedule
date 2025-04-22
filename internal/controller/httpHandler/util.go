@@ -3,11 +3,8 @@ package httpHandler
 import (
 	"encoding/json"
 	"net/http"
+	"schedule/internal/controller/httpHandler/models"
 )
-
-type errorResponse struct {
-	Error string `json:"error"`
-}
 
 func (h *Handler) writeAndLogErr(w http.ResponseWriter, err error, status int) {
 	if status < 400 {
@@ -20,7 +17,7 @@ func (h *Handler) writeAndLogErr(w http.ResponseWriter, err error, status int) {
 
 	if status < 500 {
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(errorResponse{Error: err.Error()}); err != nil {
+		if err := json.NewEncoder(w).Encode(models.ErrorResponse{Error: err.Error()}); err != nil {
 			h.l.Error(err)
 		}
 	}

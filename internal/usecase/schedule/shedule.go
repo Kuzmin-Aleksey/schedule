@@ -104,7 +104,7 @@ func (uc *Usecase) GetTimetable(ctx context.Context, userId int64, scheduleId in
 	dto := &ScheduleResponseDTO{
 		Id:        schedule.Id,
 		Name:      schedule.Name,
-		Period:    util.JsonDuration(schedule.Period),
+		Period:    schedule.Period,
 		EndAt:     schedule.EndAt,
 		Timetable: []time.Time{},
 	}
@@ -173,7 +173,7 @@ func (uc *Usecase) GetNextTakings(ctx context.Context, userId int64) ([]NextTaki
 					Id:         schedule.Id,
 					Name:       schedule.Name,
 					EndAt:      schedule.EndAt,
-					Period:     util.JsonDuration(schedule.Period),
+					Period:     schedule.Period,
 					NextTaking: timestamp,
 				}
 

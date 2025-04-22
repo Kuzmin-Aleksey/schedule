@@ -12,10 +12,10 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// ScheduleNextTakingResponseDTO schedule next taking response d t o
+// ScheduleResponse schedule response
 //
-// swagger:model schedule.NextTakingResponseDTO
-type ScheduleNextTakingResponseDTO struct {
+// swagger:model schedule_response
+type ScheduleResponse struct {
 
 	// end at
 	// Example: 2025-04-21T22:00:00Z
@@ -27,27 +27,27 @@ type ScheduleNextTakingResponseDTO struct {
 	// name
 	Name string `json:"name,omitempty"`
 
-	// next taking
-	// Example: 2025-04-21T08:00:00Z
-	NextTaking string `json:"next_taking,omitempty"`
-
 	// period
 	// Example: 1h30m
 	Period string `json:"period,omitempty"`
+
+	// timetable
+	// Example: ["2025-04-21T08:00:00Z"]
+	Timetable []string `json:"timetable"`
 }
 
-// Validate validates this schedule next taking response d t o
-func (m *ScheduleNextTakingResponseDTO) Validate(formats strfmt.Registry) error {
+// Validate validates this schedule response
+func (m *ScheduleResponse) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this schedule next taking response d t o based on context it is used
-func (m *ScheduleNextTakingResponseDTO) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validates this schedule response based on context it is used
+func (m *ScheduleResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *ScheduleNextTakingResponseDTO) MarshalBinary() ([]byte, error) {
+func (m *ScheduleResponse) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -55,8 +55,8 @@ func (m *ScheduleNextTakingResponseDTO) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *ScheduleNextTakingResponseDTO) UnmarshalBinary(b []byte) error {
-	var res ScheduleNextTakingResponseDTO
+func (m *ScheduleResponse) UnmarshalBinary(b []byte) error {
+	var res ScheduleResponse
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

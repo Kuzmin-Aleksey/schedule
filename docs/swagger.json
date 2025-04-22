@@ -5,7 +5,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "basePath": "/api",
+    "basePath": "/",
     "paths": {
         "/next_taking": {
             "get": {
@@ -27,6 +27,13 @@
                         "name": "user_id",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "+00:00",
+                        "description": "timezone",
+                        "name": "TZ",
+                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -35,20 +42,20 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/schedule.NextTakingResponseDTO"
+                                "$ref": "#/definitions/next_taking_response"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpHandler.errorResponse"
+                            "$ref": "#/definitions/error_response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpHandler.errorResponse"
+                            "$ref": "#/definitions/error_response"
                         }
                     }
                 }
@@ -69,6 +76,13 @@
                 "summary": "Get schedule",
                 "parameters": [
                     {
+                        "type": "string",
+                        "default": "+00:00",
+                        "description": "timezone",
+                        "name": "TZ",
+                        "in": "header"
+                    },
+                    {
                         "type": "integer",
                         "description": "user id",
                         "name": "user_id",
@@ -87,19 +101,19 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/schedule.ScheduleResponseDTO"
+                            "$ref": "#/definitions/schedule_response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpHandler.errorResponse"
+                            "$ref": "#/definitions/error_response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpHandler.errorResponse"
+                            "$ref": "#/definitions/error_response"
                         }
                     }
                 }
@@ -123,7 +137,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/schedule.CreateScheduleDTO"
+                            "$ref": "#/definitions/create_schedule_request"
                         }
                     }
                 ],
@@ -131,19 +145,19 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/schedule.CreateScheduleResponseDTO"
+                            "$ref": "#/definitions/create_schedule_response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpHandler.errorResponse"
+                            "$ref": "#/definitions/error_response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpHandler.errorResponse"
+                            "$ref": "#/definitions/error_response"
                         }
                     }
                 }
@@ -169,6 +183,13 @@
                         "name": "user_id",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "+00:00",
+                        "description": "timezone",
+                        "name": "TZ",
+                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -184,13 +205,13 @@
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpHandler.errorResponse"
+                            "$ref": "#/definitions/error_response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpHandler.errorResponse"
+                            "$ref": "#/definitions/error_response"
                         }
                     }
                 }
@@ -198,7 +219,7 @@
         }
     },
     "definitions": {
-        "httpHandler.errorResponse": {
+        "error_response": {
             "type": "object",
             "properties": {
                 "error": {
@@ -206,7 +227,7 @@
                 }
             }
         },
-        "schedule.CreateScheduleDTO": {
+        "create_schedule_request": {
             "type": "object",
             "properties": {
                 "duration": {
@@ -225,7 +246,7 @@
                 }
             }
         },
-        "schedule.CreateScheduleResponseDTO": {
+        "create_schedule_response": {
             "type": "object",
             "properties": {
                 "id": {
@@ -233,7 +254,7 @@
                 }
             }
         },
-        "schedule.NextTakingResponseDTO": {
+        "next_taking_response": {
             "type": "object",
             "properties": {
                 "end_at": {
@@ -256,7 +277,7 @@
                 }
             }
         },
-        "schedule.ScheduleResponseDTO": {
+        "schedule_response": {
             "type": "object",
             "properties": {
                 "end_at": {

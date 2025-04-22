@@ -1,14 +1,13 @@
 package entity
 
 import (
-	"schedule/internal/util"
 	"time"
 )
 
 const (
 	MaxMedicineNameLen = 255
-	MinSchedulePeriod  = util.JsonDuration(time.Hour)
-	MaxSchedulePeriod  = util.JsonDuration(time.Hour * 24)
+	MinSchedulePeriod  = time.Hour
+	MaxSchedulePeriod  = time.Hour * 24
 )
 
 type Schedule struct {

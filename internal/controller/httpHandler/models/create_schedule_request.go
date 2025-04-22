@@ -12,10 +12,10 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// ScheduleCreateScheduleDTO schedule create schedule d t o
+// CreateScheduleRequest create schedule request
 //
-// swagger:model schedule.CreateScheduleDTO
-type ScheduleCreateScheduleDTO struct {
+// swagger:model create_schedule_request
+type CreateScheduleRequest struct {
 
 	// days
 	Duration int64 `json:"duration,omitempty"`
@@ -31,18 +31,18 @@ type ScheduleCreateScheduleDTO struct {
 	UserID int64 `json:"user_id,omitempty"`
 }
 
-// Validate validates this schedule create schedule d t o
-func (m *ScheduleCreateScheduleDTO) Validate(formats strfmt.Registry) error {
+// Validate validates this create schedule request
+func (m *CreateScheduleRequest) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this schedule create schedule d t o based on context it is used
-func (m *ScheduleCreateScheduleDTO) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validates this create schedule request based on context it is used
+func (m *CreateScheduleRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *ScheduleCreateScheduleDTO) MarshalBinary() ([]byte, error) {
+func (m *CreateScheduleRequest) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -50,8 +50,8 @@ func (m *ScheduleCreateScheduleDTO) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *ScheduleCreateScheduleDTO) UnmarshalBinary(b []byte) error {
-	var res ScheduleCreateScheduleDTO
+func (m *CreateScheduleRequest) UnmarshalBinary(b []byte) error {
+	var res CreateScheduleRequest
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

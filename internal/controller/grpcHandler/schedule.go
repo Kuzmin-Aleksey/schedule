@@ -7,8 +7,8 @@ import (
 	"google.golang.org/grpc/status"
 	"schedule/gen-proto"
 	"schedule/internal/usecase/schedule"
-	"schedule/internal/util"
 	"schedule/pkg/logger"
+	"time"
 )
 
 type scheduleAPI struct {
@@ -41,7 +41,7 @@ func (s *scheduleAPI) CreateSchedule(ctx context.Context, req *schedulev1.Create
 		UserId:   req.GetUserId(),
 		Name:     req.GetName(),
 		Duration: uint(req.GetDuration()),
-		Period:   util.JsonDuration(req.GetPeriod()),
+		Period:   time.Duration(req.GetPeriod()),
 	})
 	if err != nil {
 		s.l.Error(err)

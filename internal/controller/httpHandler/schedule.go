@@ -3,8 +3,10 @@ package httpHandler
 import (
 	"encoding/json"
 	"net/http"
+	"schedule/internal/controller/httpHandler/models"
 	"schedule/internal/usecase/schedule"
 	"strconv"
+	"time"
 )
 
 // @Summary      Create schedule
@@ -18,20 +20,38 @@ import (
 // @Failure      500  {object}  errorResponse
 // @Router       /schedule [post]
 func (h *Handler) createSchedule(w http.ResponseWriter, r *http.Request) {
-	dto := new(schedule.CreateScheduleDTO)
-	if err := json.NewDecoder(r.Body).Decode(dto); err != nil {
-		h.writeAndLogErr(w, err, http.StatusBadRequest)
-		return
-	}
-	if err := dto.Validate(); err != nil {
+	req := new(models.CreateScheduleRequest)
+	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		h.writeAndLogErr(w, err, http.StatusBadRequest)
 		return
 	}
 
-	resp, err := h.schedule.Create(r.Context(), dto)
+	duration, err := time.ParseDuration(req.Period)
+	if err != nil {
+		h.writeAndLogErr(w, err, http.StatusBadRequest)
+		return
+	}
+
+	reqDto := &schedule.CreateScheduleDTO{
+		UserId:   req.UserID,
+		Name:     req.Name,
+		Duration: uint(req.Duration),
+		Period:   duration,
+	}
+
+	if err := reqDto.Validate(); err != nil {
+		h.writeAndLogErr(w, err, http.StatusBadRequest)
+		return
+	}
+
+	respDto, err := h.schedule.Create(r.Context(), reqDto)
 	if err != nil {
 		h.writeAndLogErr(w, err, http.StatusInternalServerError)
 		return
+	}
+
+	resp := &models.CreateScheduleResponse{
+		ID: int64(respDto.Id),
 	}
 
 	h.writeJson(w, resp, http.StatusOK)
@@ -43,6 +63,7 @@ func (h *Handler) createSchedule(w http.ResponseWriter, r *http.Request) {
 // @Accept       json
 // @Produce      json
 // @Param        user_id query integer  true "user id"
+// @Param 		 TZ header string false "timezone" default(+00:00)
 // @Success      200  {array}   integer
 // @Failure      400  {object}  errorResponse
 // @Failure      500  {object}  errorResponse
@@ -70,6 +91,7 @@ func (h *Handler) getUserSchedules(w http.ResponseWriter, r *http.Request) {
 // @Produce      json
 // @Param        user_id query integer  true "user id"
 // @Param        schedule_id query integer  true "schedule id"
+// @Param 		 TZ header string false "timezone" default(+00:00)
 // @Success      200  {object}  schedule.ScheduleResponseDTO
 // @Failure      400  {object}  errorResponse
 // @Failure      500  {object}  errorResponse
@@ -86,10 +108,28 @@ func (h *Handler) getSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.schedule.GetTimetable(r.Context(), userId, scheduleId)
+	respDto, err := h.schedule.GetTimetable(r.Context(), userId, scheduleId)
 	if err != nil {
 		h.writeAndLogErr(w, err, http.StatusInternalServerError)
 		return
+	}
+
+	var endAt string
+	if respDto.EndAt != nil {
+		endAt = respDto.EndAt.String()
+	}
+
+	timeTable := make([]string, len(respDto.Timetable))
+	for i, t := range respDto.Timetable {
+		timeTable[i] = t.String()
+	}
+
+	resp := &models.ScheduleResponse{
+		ID:        int64(respDto.Id),
+		EndAt:     endAt,
+		Name:      respDto.Name,
+		Period:    respDto.Period.String(),
+		Timetable: timeTable,
 	}
 
 	h.writeJson(w, resp, http.StatusOK)
@@ -101,6 +141,7 @@ func (h *Handler) getSchedule(w http.ResponseWriter, r *http.Request) {
 // @Accept       json
 // @Produce      json
 // @Param        user_id query integer  true "user id"
+// @Param 		 TZ header string false "timezone" default(+00:00)
 // @Success      200  {array}   schedule.NextTakingResponseDTO
 // @Failure      400  {object}  errorResponse
 // @Failure      500  {object}  errorResponse
@@ -112,10 +153,27 @@ func (h *Handler) scheduleGetNextTakings(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	resp, err := h.schedule.GetNextTakings(r.Context(), userId)
+	respDto, err := h.schedule.GetNextTakings(r.Context(), userId)
 	if err != nil {
 		h.writeAndLogErr(w, err, http.StatusInternalServerError)
 		return
+	}
+
+	resp := make([]*models.NextTakingResponse, len(respDto))
+
+	for i, t := range respDto {
+		var endAt string
+		if t.EndAt != nil {
+			endAt = t.EndAt.String()
+		}
+
+		resp[i] = &models.NextTakingResponse{
+			ID:         int64(t.Id),
+			EndAt:      endAt,
+			Name:       t.Name,
+			NextTaking: t.NextTaking.String(),
+			Period:     t.Period.String(),
+		}
 	}
 
 	h.writeJson(w, resp, http.StatusOK)
