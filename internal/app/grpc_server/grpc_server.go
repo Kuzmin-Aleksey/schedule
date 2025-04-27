@@ -1,4 +1,4 @@
-package app
+package grpc_server
 
 import (
 	"context"
@@ -29,8 +29,8 @@ func NewGrpcServer(l *slog.Logger, schedule *schedule.Usecase) *grpc.Server {
 		),
 	}
 	recoveryOpts := []recovery.Option{
-		recovery.WithRecoveryHandler(func(p any) (err error) {
-			l.Error("recovered panic ", p)
+		recovery.WithRecoveryHandlerContext(func(ctx context.Context, p any) (err error) {
+			l.ErrorContext(ctx, "recovered panic ", "err", p)
 			return status.Error(codes.Internal, "internal error")
 		}),
 	}
@@ -43,13 +43,6 @@ func NewGrpcServer(l *slog.Logger, schedule *schedule.Usecase) *grpc.Server {
 	))
 	grpcHandler.Register(grpcServer, schedule, l)
 	return grpcServer
-}
-
-func interceptorLog(l *slog.Logger) logging.Logger {
-	return logging.LoggerFunc(func(ctx context.Context, level logging.Level, msg string, fields ...any) {
-		// todo clear safe fields
-		l.Log(ctx, slog.Level(level), msg, fields...)
-	})
 }
 
 func timezoneUnaryInterceptor(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {

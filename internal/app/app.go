@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"schedule/config"
+	"schedule/internal/app/grpc_server"
 	"schedule/internal/app/logger"
 	mysqlRepo "schedule/internal/repository/mysql"
 	"schedule/internal/usecase/schedule"
@@ -38,7 +39,7 @@ func Run(cfg *config.Config) {
 	scheduleUsecase := schedule.NewUsecase(scheduleRepo, l, cfg.Schedule)
 
 	httpServer := newHttpServer(l, scheduleUsecase, cfg.HttpServer)
-	grpcServer := NewGrpcServer(l, scheduleUsecase)
+	grpcServer := grpc_server.NewGrpcServer(l, scheduleUsecase)
 
 	go func() {
 		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
