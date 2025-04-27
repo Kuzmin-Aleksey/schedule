@@ -1,8 +1,6 @@
 package util
 
 import (
-	"fmt"
-	"reflect"
 	"strings"
 	"time"
 )
@@ -64,35 +62,4 @@ func (d *JsonDuration) UnmarshalJSON(data []byte) error {
 
 func Ptr[T any](v T) *T {
 	return &v
-}
-
-func ConvertStructToMap(s any) map[string]any {
-	m := make(map[string]any)
-
-	t := reflect.TypeOf(s)
-	v := reflect.ValueOf(s)
-
-	for i := range t.NumField() {
-		f := t.Field(i)
-		val := v.Field(i)
-
-		if !val.CanInterface() {
-			continue
-		}
-		
-		if val.Type().Kind() == reflect.Struct {
-			m2 := ConvertStructToMap(val.Interface())
-			if len(m2) > 0 {
-				m[f.Name] = m2
-			} else {
-				m[f.Name] = fmt.Sprint(val.Interface())
-			}
-			continue
-		}
-
-		m[f.Name] = val.Interface()
-
-	}
-
-	return m
 }
