@@ -1,34 +1,31 @@
 package httpHandler
 
 import (
+	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"schedule/internal/controller/httpHandler/models"
 )
 
-func (h *Handler) writeAndLogErr(w http.ResponseWriter, err error, status int) {
-	if status < 400 {
-		h.l.Debug(err)
-	} else if status < 500 {
-		h.l.Warn(err)
-	} else {
-		h.l.Error(err)
+const errEncodingJson = "json encode error"
+
+func (h *Handler) writeAndLogErr(ctx context.Context, w http.ResponseWriter, err error, status int) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(models.ErrorResponse{Error: err.Error()}); err != nil {
+		h.l.LogAttrs(ctx, slog.LevelError, errEncodingJson, slog.String("err", err.Error()))
 	}
 
-	if status < 500 {
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(models.ErrorResponse{Error: err.Error()}); err != nil {
-			h.l.Error(err)
-		}
-	}
+	h.l.LogAttrs(ctx, slog.LevelError, "error handling request", slog.String("err", err.Error()))
 
 	w.WriteHeader(status)
 }
 
-func (h *Handler) writeJson(w http.ResponseWriter, v any, status int) {
+func (h *Handler) writeJson(ctx context.Context, w http.ResponseWriter, v any, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	if err := json.NewEncoder(w).Encode(v); err != nil {
-		h.l.Error(err)
+		h.l.LogAttrs(ctx, slog.LevelError, errEncodingJson, slog.String("err", err.Error()))
 	}
 }

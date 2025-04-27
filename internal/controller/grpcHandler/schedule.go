@@ -5,19 +5,19 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"log/slog"
 	"schedule/gen-proto"
 	"schedule/internal/usecase/schedule"
-	"schedule/pkg/logger"
 	"time"
 )
 
 type scheduleAPI struct {
 	schedulev1.UnimplementedScheduleServer
 	schedule *schedule.Usecase
-	l        *logger.Logger
+	l        *slog.Logger
 }
 
-func Register(server *grpc.Server, schedule *schedule.Usecase, l *logger.Logger) {
+func Register(server *grpc.Server, schedule *schedule.Usecase, l *slog.Logger) {
 	schedulev1.RegisterScheduleServer(server, &scheduleAPI{
 		schedule: schedule,
 		l:        l,
@@ -44,7 +44,7 @@ func (s *scheduleAPI) CreateSchedule(ctx context.Context, req *schedulev1.Create
 		Period:   time.Duration(req.GetPeriod()),
 	})
 	if err != nil {
-		s.l.Error(err)
+		s.l.LogAttrs(ctx, slog.LevelError, "handling request error", slog.String("err", err.Error()))
 		return nil, status.Error(codes.Internal, errInternal)
 	}
 
@@ -63,7 +63,7 @@ func (s *scheduleAPI) GetTimetable(ctx context.Context, req *schedulev1.GetTimet
 
 	resp, err := s.schedule.GetTimetable(ctx, req.GetUserId(), int(req.GetScheduleId()))
 	if err != nil {
-		s.l.Error(err)
+		s.l.LogAttrs(ctx, slog.LevelError, "handling request error", slog.String("err", err.Error()))
 		return nil, status.Error(codes.Internal, errInternal)
 	}
 
@@ -91,7 +91,7 @@ func (s *scheduleAPI) GetByUser(ctx context.Context, req *schedulev1.GetByUserRe
 
 	ids, err := s.schedule.GetByUser(ctx, req.GetUserId())
 	if err != nil {
-		s.l.Error(err)
+		s.l.LogAttrs(ctx, slog.LevelError, "handling request error", slog.String("err", err.Error()))
 		return nil, status.Error(codes.Internal, errInternal)
 	}
 
@@ -112,7 +112,7 @@ func (s *scheduleAPI) GetNextTakings(ctx context.Context, req *schedulev1.GetNex
 
 	resp, err := s.schedule.GetNextTakings(ctx, req.GetUserId())
 	if err != nil {
-		s.l.Error(err)
+		s.l.ErrorContext(ctx, "GetNextTakings failed", "err", err)
 		return nil, status.Error(codes.Internal, errInternal)
 	}
 

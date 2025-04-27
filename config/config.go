@@ -21,8 +21,9 @@ type ScheduleConfig struct {
 }
 
 type LogConfig struct {
-	File  string `yaml:"file" env:"LOG_FILE" env-default:""`
-	Level string `yaml:"level" env:"LOG_LEVEL" env-default:"debug"`
+	File   string `yaml:"file" env:"LOG_FILE" env-default:""`
+	Level  string `yaml:"level" env:"LOG_LEVEL" env-default:"debug"`
+	Format string `yaml:"format" env:"LOG_FORMAT" env-default:"json"`
 }
 
 type DbConfig struct {
@@ -38,6 +39,14 @@ type HttpServerConfig struct {
 	ReadTimeout     time.Duration `yaml:"read_timeout" env:"HTTP_READ_TIMEOUT" env-default:"10s"`
 	WriteTimeout    time.Duration `yaml:"write_timeout" env:"HTTP_WRITE_TIMEOUT" env-default:"10s"`
 	ShutdownTimeout time.Duration `yaml:"shutdown_timeout" env:"HTTP_SHUTDOWN_TIMEOUT" env-default:"10s"`
+	Log             HttpLog       `yaml:"log"`
+}
+
+type HttpLog struct {
+	MaxRequestContentLen   int      `yaml:"max_request_content_len" env:"HTTP_LOG_MAX_REQUEST_CONTENT_LEN" env-default:"2048"`
+	MaxResponseContentLen  int      `yaml:"max_response_content_len" env:"HTTP_LOG_MAX_RESPONSE_CONTENT_LEN" env-default:"2048"`
+	RequestLoggingContent  []string `yaml:"request_logging_content" env:"HTTP_LOG_REQUEST_LOGGING_CONTENT" env-default:""`
+	ResponseLoggingContent []string `yaml:"response_logging_content" env:"HTTP_LOG_RESPONSE_LOGGING_CONTENT" env-default:""`
 }
 
 type GrpcServerConfig struct {

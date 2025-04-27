@@ -3,26 +3,46 @@ package httpHandler
 import (
 	"github.com/gorilla/mux"
 	httpSwagger "github.com/swaggo/http-swagger"
+	"log/slog"
 	"net/http"
+	"schedule/config"
 	_ "schedule/docs"
 	"schedule/internal/usecase/schedule"
-	"schedule/pkg/logger"
 )
 
 type Handler struct {
 	rtr *mux.Router
-	l   *logger.Logger
+	l   *slog.Logger
+
+	maxLogContentReqLen  int64
+	maxLogContentRespLen int
+	logReqContent        map[string]struct{}
+	logRespContent       map[string]struct{}
 
 	schedule *schedule.Usecase
 }
 
-func NewHandler(l *logger.Logger) *Handler {
+func NewHandler(l *slog.Logger, logCfg *config.HttpLog) *Handler {
 	var h = &Handler{
-		rtr: mux.NewRouter(),
-		l:   l,
+		rtr:                  mux.NewRouter(),
+		l:                    l,
+		maxLogContentReqLen:  int64(logCfg.MaxResponseContentLen),
+		maxLogContentRespLen: logCfg.MaxResponseContentLen,
+		logReqContent:        make(map[string]struct{}),
+		logRespContent:       make(map[string]struct{}),
 	}
 
-	h.rtr.Use(h.mwLogging)
+	for _, c := range logCfg.RequestLoggingContent {
+		h.logReqContent[c] = struct{}{}
+	}
+	for _, c := range logCfg.ResponseLoggingContent {
+		h.logRespContent[c] = struct{}{}
+	}
+
+	h.rtr.Use(
+		h.MwAddTraceId,
+		h.mwLogging,
+	)
 
 	return h
 }

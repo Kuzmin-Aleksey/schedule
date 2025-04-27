@@ -20,15 +20,17 @@ import (
 // @Failure      500  {object}  errorResponse
 // @Router       /schedule [post]
 func (h *Handler) createSchedule(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	req := new(models.CreateScheduleRequest)
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
-		h.writeAndLogErr(w, err, http.StatusBadRequest)
+		h.writeAndLogErr(ctx, w, err, http.StatusBadRequest)
 		return
 	}
 
 	duration, err := time.ParseDuration(req.Period)
 	if err != nil {
-		h.writeAndLogErr(w, err, http.StatusBadRequest)
+		h.writeAndLogErr(ctx, w, err, http.StatusBadRequest)
 		return
 	}
 
@@ -40,13 +42,13 @@ func (h *Handler) createSchedule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := reqDto.Validate(); err != nil {
-		h.writeAndLogErr(w, err, http.StatusBadRequest)
+		h.writeAndLogErr(ctx, w, err, http.StatusBadRequest)
 		return
 	}
 
 	respDto, err := h.schedule.Create(r.Context(), reqDto)
 	if err != nil {
-		h.writeAndLogErr(w, err, http.StatusInternalServerError)
+		h.writeAndLogErr(ctx, w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -54,7 +56,7 @@ func (h *Handler) createSchedule(w http.ResponseWriter, r *http.Request) {
 		ID: int64(respDto.Id),
 	}
 
-	h.writeJson(w, resp, http.StatusOK)
+	h.writeJson(ctx, w, resp, http.StatusOK)
 }
 
 // @Summary      Get user schedules
@@ -69,19 +71,21 @@ func (h *Handler) createSchedule(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}  errorResponse
 // @Router       /schedules [get]
 func (h *Handler) getUserSchedules(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	userId, err := strconv.ParseInt(r.FormValue("user_id"), 10, 64)
 	if err != nil {
-		h.writeAndLogErr(w, err, http.StatusBadRequest)
+		h.writeAndLogErr(ctx, w, err, http.StatusBadRequest)
 		return
 	}
 
-	resp, err := h.schedule.GetByUser(r.Context(), userId)
+	resp, err := h.schedule.GetByUser(ctx, userId)
 	if err != nil {
-		h.writeAndLogErr(w, err, http.StatusInternalServerError)
+		h.writeAndLogErr(ctx, w, err, http.StatusInternalServerError)
 		return
 	}
 
-	h.writeJson(w, resp, http.StatusOK)
+	h.writeJson(ctx, w, resp, http.StatusOK)
 }
 
 // @Summary      Get schedule
@@ -97,20 +101,22 @@ func (h *Handler) getUserSchedules(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}  errorResponse
 // @Router       /schedule [get]
 func (h *Handler) getSchedule(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	userId, err := strconv.ParseInt(r.FormValue("user_id"), 10, 64)
 	if err != nil {
-		h.writeAndLogErr(w, err, http.StatusBadRequest)
+		h.writeAndLogErr(ctx, w, err, http.StatusBadRequest)
 		return
 	}
 	scheduleId, err := strconv.Atoi(r.FormValue("schedule_id"))
 	if err != nil {
-		h.writeAndLogErr(w, err, http.StatusBadRequest)
+		h.writeAndLogErr(ctx, w, err, http.StatusBadRequest)
 		return
 	}
 
-	respDto, err := h.schedule.GetTimetable(r.Context(), userId, scheduleId)
+	respDto, err := h.schedule.GetTimetable(ctx, userId, scheduleId)
 	if err != nil {
-		h.writeAndLogErr(w, err, http.StatusInternalServerError)
+		h.writeAndLogErr(ctx, w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -132,7 +138,7 @@ func (h *Handler) getSchedule(w http.ResponseWriter, r *http.Request) {
 		Timetable: timeTable,
 	}
 
-	h.writeJson(w, resp, http.StatusOK)
+	h.writeJson(ctx, w, resp, http.StatusOK)
 }
 
 // @Summary      Get next takings
@@ -147,15 +153,17 @@ func (h *Handler) getSchedule(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}  errorResponse
 // @Router       /next_taking [get]
 func (h *Handler) scheduleGetNextTakings(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	userId, err := strconv.ParseInt(r.FormValue("user_id"), 10, 64)
 	if err != nil {
-		h.writeAndLogErr(w, err, http.StatusBadRequest)
+		h.writeAndLogErr(ctx, w, err, http.StatusBadRequest)
 		return
 	}
 
-	respDto, err := h.schedule.GetNextTakings(r.Context(), userId)
+	respDto, err := h.schedule.GetNextTakings(ctx, userId)
 	if err != nil {
-		h.writeAndLogErr(w, err, http.StatusInternalServerError)
+		h.writeAndLogErr(ctx, w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -176,5 +184,5 @@ func (h *Handler) scheduleGetNextTakings(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	h.writeJson(w, resp, http.StatusOK)
+	h.writeJson(ctx, w, resp, http.StatusOK)
 }
