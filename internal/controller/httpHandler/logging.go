@@ -136,13 +136,19 @@ func (h *Handler) logResponse(ctx context.Context, r *LoggingWriter, handleDurat
 	h.l.LogAttrs(ctx, slog.LevelInfo, "response sent", attrs...)
 }
 
+var safeFields = map[string]struct{}{
+	"user_id": {},
+	"userid":  {},
+	"user-id": {},
+}
+
 func hideSafeValuesInMap(m map[string]any) {
 	for k := range m {
 		if _, ok := m[k].(map[string]any); ok {
 			hideSafeValuesInMap(m[k].(map[string]any))
 		}
 
-		if k == "user_id" {
+		if _, ok := safeFields[k]; ok {
 			m[k] = "hidden"
 		}
 	}
@@ -155,17 +161,15 @@ func getSafeSlogValues(v url.Values) []any {
 
 	attrs := make([]any, 0, len(v))
 
-	for key := range v {
+	for k := range v {
 		var val string
-		if key == "user_id" {
-			for range len(v.Get(key)) {
-				val += "*"
-			}
+		if _, ok := safeFields[k]; ok {
+			val = "hidden"
 		} else {
-			val = v.Get(key)
+			val = v.Get(k)
 		}
 
-		attrs = append(attrs, slog.String(key, val))
+		attrs = append(attrs, slog.String(k, val))
 	}
 
 	return attrs
