@@ -3,6 +3,7 @@ package httpHandler
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"log/slog"
 	"net/http"
@@ -58,6 +59,8 @@ func (h *Handler) mwLogging(next http.Handler) http.Handler {
 func (h *Handler) logRequest(r *http.Request) {
 	ctx := r.Context()
 
+	contentType := r.Header.Get("Content-Type")
+
 	attrs := []slog.Attr{
 		slog.String("protocol", r.Proto),
 		slog.String("method", r.Method),
@@ -65,7 +68,7 @@ func (h *Handler) logRequest(r *http.Request) {
 		slog.String("remote_addr", r.RemoteAddr),
 		slog.String("user_agent", r.UserAgent()),
 		slog.Int64("content_length", r.ContentLength),
-		slog.String("content_type", r.Header.Get("Content-Type")),
+		slog.String("content_type", contentType),
 	}
 
 	if r.Form == nil {
@@ -76,17 +79,73 @@ func (h *Handler) logRequest(r *http.Request) {
 		attrs = append(attrs, slog.Group("values", getSafeSlogValues(r.Form)...))
 	}
 
-	if _, logContent := h.logReqContent[r.Header.Get("Content-Type")]; r.ContentLength > 0 && r.ContentLength <= h.maxLogContentReqLen && logContent {
+	if _, logContent := h.logReqContent[contentType]; r.ContentLength > 0 && r.ContentLength <= h.maxLogContentReqLen && logContent {
 		content, err := io.ReadAll(r.Body)
 		if err != nil {
 			content = []byte{}
 			h.l.LogAttrs(ctx, slog.LevelError, "read request body error", slog.String("err", err.Error()))
 		}
-		attrs = append(attrs, slog.String("content", string(content)))
+
+		if contentType == "application/json" {
+			var mapContent map[string]interface{}
+
+			if err := json.Unmarshal(content, &mapContent); err != nil {
+				h.l.ErrorContext(ctx, "unmarshal request body to map error", slog.String("err", err.Error()))
+			}
+
+			hideSafeValuesInMap(mapContent)
+
+			attrs = append(attrs, slog.Any("content", mapContent))
+		} else {
+			attrs = append(attrs, slog.String("content", string(content)))
+		}
+
 		r.Body = io.NopCloser(bytes.NewReader(content))
 	}
 
 	h.l.LogAttrs(ctx, slog.LevelInfo, "request received", attrs...)
+}
+
+func (h *Handler) logResponse(ctx context.Context, r *LoggingWriter, handleDuration time.Duration) {
+	contentType := r.Header().Get("Content-Type")
+
+	attrs := []slog.Attr{
+		slog.String("status", strconv.Itoa(r.StatusCode)),
+		slog.Duration("handle_duration", handleDuration),
+		slog.String("content_type", contentType),
+		slog.Int("content_len", r.ContentLength),
+	}
+
+	if _, logContent := h.logRespContent[contentType]; len(r.Content) > 0 && logContent {
+
+		if contentType == "application/json" {
+			var mapContent map[string]interface{}
+
+			if err := json.Unmarshal(r.Content, &mapContent); err != nil {
+				h.l.ErrorContext(ctx, "unmarshal response body to map error", slog.String("err", err.Error()))
+			}
+
+			hideSafeValuesInMap(mapContent)
+
+			attrs = append(attrs, slog.Any("content", mapContent))
+		} else {
+			attrs = append(attrs, slog.String("content", string(r.Content)))
+		}
+	}
+
+	h.l.LogAttrs(ctx, slog.LevelInfo, "response sent", attrs...)
+}
+
+func hideSafeValuesInMap(m map[string]any) {
+	for k := range m {
+		if _, ok := m[k].(map[string]any); ok {
+			hideSafeValuesInMap(m[k].(map[string]any))
+		}
+
+		if k == "user_id" {
+			m[k] = "hidden"
+		}
+	}
 }
 
 func getSafeSlogValues(v url.Values) []any {
@@ -110,21 +169,4 @@ func getSafeSlogValues(v url.Values) []any {
 	}
 
 	return attrs
-}
-
-func (h *Handler) logResponse(ctx context.Context, r *LoggingWriter, handleDuration time.Duration) {
-	contentType := r.Header().Get("Content-Type")
-
-	attrs := []slog.Attr{
-		slog.String("status", strconv.Itoa(r.StatusCode)),
-		slog.Duration("handle_duration", handleDuration),
-		slog.String("content_type", contentType),
-		slog.Int("content_len", r.ContentLength),
-	}
-
-	if _, logContent := h.logRespContent[contentType]; len(r.Content) > 0 && logContent {
-		attrs = append(attrs, slog.String("content", string(r.Content)))
-	}
-
-	h.l.LogAttrs(ctx, slog.LevelInfo, "response sent", attrs...)
 }
