@@ -35,7 +35,7 @@ func Run(cfg *config.Config) {
 		log.Fatal("migrate failed: ", err)
 	}
 
-	scheduleUsecase := schedule.NewUsecase(scheduleRepo, cfg.Schedule)
+	scheduleUsecase := schedule.NewUsecase(scheduleRepo, l, cfg.Schedule)
 
 	httpServer := newHttpServer(l, scheduleUsecase, cfg.HttpServer)
 	grpcServer := NewGrpcServer(l, scheduleUsecase)

@@ -3,6 +3,7 @@ package schedule
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"schedule/config"
 	"schedule/internal/entity"
 	"schedule/internal/util"
@@ -34,13 +35,15 @@ type Repo interface {
 
 type Usecase struct {
 	repo Repo
+	l    *slog.Logger
 	cfg  config.ScheduleConfig
 }
 
-func NewUsecase(repo Repo, cfg config.ScheduleConfig) *Usecase {
+func NewUsecase(repo Repo, l *slog.Logger, cfg config.ScheduleConfig) *Usecase {
 	time.Local = nil
 	return &Usecase{
 		repo: repo,
+		l:    l,
 		cfg:  cfg,
 	}
 }
@@ -55,12 +58,15 @@ func (uc *Usecase) Create(ctx context.Context, dto *CreateScheduleDTO) (*CreateS
 		UserId: dto.UserId,
 		Name:   dto.Name,
 		EndAt:  expiredAt,
-		Period: time.Duration(dto.Period),
+		Period: dto.Period,
 	}
 
 	if err := uc.repo.Save(ctx, schedule); err != nil {
+		uc.l.ErrorContext(ctx, "create schedule error", "err", err)
 		return nil, err
 	}
+
+	uc.l.DebugContext(ctx, "create schedule", "schedule", schedule)
 
 	return &CreateScheduleResponseDTO{
 		Id: schedule.Id,
@@ -74,17 +80,24 @@ func (uc *Usecase) GetByUser(ctx context.Context, userId int64) ([]int, error) {
 
 	schedules, err := uc.repo.GetByUser(ctx, userId)
 	if err != nil {
+		uc.l.ErrorContext(ctx, "get schedule by user error", "err", err)
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	var ids []int
 	now := time.Now().In(location)
+	uc.l.DebugContext(ctx, op, "user time", now)
+
+	var ids []int
 	for _, schedule := range schedules {
 		uc.setScheduleEndHour(location, &schedule)
 		if schedule.EndAt == nil || schedule.EndAt.After(now) {
 			ids = append(ids, schedule.Id)
+		} else {
+			uc.l.DebugContext(ctx, "schedule expired", "schedule", schedule)
 		}
 	}
+
+	uc.l.DebugContext(ctx, op, "schedules", ids)
 
 	return ids, nil
 }
@@ -94,6 +107,7 @@ func (uc *Usecase) GetTimetable(ctx context.Context, userId int64, scheduleId in
 
 	schedule, err := uc.repo.GetById(ctx, userId, scheduleId)
 	if err != nil {
+		uc.l.ErrorContext(ctx, "get schedule error", "err", err, "scheduleId", scheduleId)
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -110,8 +124,10 @@ func (uc *Usecase) GetTimetable(ctx context.Context, userId int64, scheduleId in
 	}
 
 	now := time.Now().In(location)
+	uc.l.DebugContext(ctx, op, "user time", now)
 
 	if now.Round(time.Hour).Hour() > uc.cfg.EndDayHour { // if night then calculate for next day
+		uc.l.DebugContext(ctx, "calculate for next day")
 		now = now.Add(day)
 	}
 
@@ -133,6 +149,8 @@ func (uc *Usecase) GetTimetable(ctx context.Context, userId int64, scheduleId in
 		dto.Timetable = append(dto.Timetable, timestamp)
 	}
 
+	uc.l.DebugContext(ctx, op, "timetable", dto)
+
 	return dto, nil
 }
 
@@ -141,11 +159,13 @@ func (uc *Usecase) GetNextTakings(ctx context.Context, userId int64) ([]NextTaki
 
 	schedules, err := uc.repo.GetByUser(ctx, userId)
 	if err != nil {
+		uc.l.ErrorContext(ctx, "get schedule by user error", "err", err)
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	location := getLocationCtx(ctx)
 	now := time.Now().In(location)
+	uc.l.DebugContext(ctx, op, "user time", now)
 
 	nextTakingPeriod := now.Add(uc.cfg.NextTakingPeriod)
 
@@ -155,16 +175,19 @@ func (uc *Usecase) GetNextTakings(ctx context.Context, userId int64) ([]NextTaki
 
 	for _, schedule := range schedules {
 		uc.setScheduleEndHour(location, &schedule)
+		uc.l.DebugContext(ctx, "finding taking", "schedule", schedule)
 
 		for i := 0; ; i++ {
 			timestamp := beginOfCurrentDay.Add(time.Duration(i) * schedule.Period)
 			timestamp = timestamp.Round(uc.cfg.TimeRound)
 
 			if schedule.EndAt != nil && timestamp.After(*schedule.EndAt) { // if schedule end
+				uc.l.DebugContext(ctx, "schedule expired", "schedule", schedule)
 				break
 			}
 
 			if timestamp.After(nextTakingPeriod) {
+				uc.l.DebugContext(ctx, "schedule out of period", "schedule", schedule)
 				break
 			}
 
@@ -177,6 +200,8 @@ func (uc *Usecase) GetNextTakings(ctx context.Context, userId int64) ([]NextTaki
 					NextTaking: timestamp,
 				}
 
+				uc.l.DebugContext(ctx, "find next taking", "nextTaking", nextTaking)
+
 				dto = util.InsertFunc(dto, nextTaking, func(v NextTakingResponseDTO) bool { // make sorted result
 					return nextTaking.NextTaking.Before(v.NextTaking)
 				})
@@ -185,6 +210,8 @@ func (uc *Usecase) GetNextTakings(ctx context.Context, userId int64) ([]NextTaki
 			}
 		}
 	}
+
+	uc.l.DebugContext(ctx, op, "NextTakings", dto)
 
 	return dto, nil
 }
