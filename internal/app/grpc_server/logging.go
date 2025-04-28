@@ -2,6 +2,7 @@ package grpc_server
 
 import (
 	"context"
+	"fmt"
 	"github.com/brunoga/deep"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"log/slog"
@@ -18,7 +19,9 @@ func interceptorLog(l *slog.Logger) logging.Logger {
 					l.ErrorContext(ctx, "copy message failed", "err", err)
 					break
 				}
-				hideSafeValues(c)
+				if err := hideSafeValues(c); err != nil {
+					l.ErrorContext(ctx, "hide safe fields failed", "err", err)
+				}
 				fields[i+1] = c
 			}
 		}
@@ -31,7 +34,13 @@ var safeFields = map[string]struct{}{
 	"userid":  {},
 }
 
-func hideSafeValues(s any) {
+func hideSafeValues(s any) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%v", r)
+		}
+	}()
+
 	var ps reflect.Value
 
 	if v, ok := s.(reflect.Value); ok {
@@ -57,14 +66,20 @@ func hideSafeValues(s any) {
 
 		switch f.Type.Kind() {
 		case reflect.Struct:
-			hideSafeValues(v)
+			if e := hideSafeValues(v); e != nil {
+				err = e
+			}
 		case reflect.Slice:
 			for i := 0; i < v.Len(); i++ {
-				hideSafeValues(v.Index(i))
+				if e := hideSafeValues(v.Index(i)); e != nil {
+					err = e
+				}
 			}
 		case reflect.Map:
 			for _, k := range v.MapKeys() {
-				hideSafeValues(v.MapIndex(k))
+				if e := hideSafeValues(v.MapIndex(k)); e != nil {
+					err = e
+				}
 			}
 		default:
 			if _, ok := safeFields[strings.ToLower(f.Name)]; ok && v.CanSet() {
@@ -72,4 +87,6 @@ func hideSafeValues(s any) {
 			}
 		}
 	}
+
+	return
 }
