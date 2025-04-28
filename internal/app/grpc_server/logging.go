@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/brunoga/deep"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
-	"log"
 	"log/slog"
 	"reflect"
 	"strings"
@@ -16,12 +15,11 @@ func interceptorLog(l *slog.Logger) logging.Logger {
 			if f == "grpc.request.content" || f == "grpc.response.content" {
 				c, err := deep.CopySkipUnsupported(fields[i+1])
 				if err != nil {
-					log.Println(err)
+					l.ErrorContext(ctx, "copy message failed", "err", err)
 					break
 				}
-				HideSafeValues(c)
+				hideSafeValues(c)
 				fields[i+1] = c
-				log.Printf("%+#v", c)
 			}
 		}
 		l.Log(ctx, slog.Level(level), msg, fields...)
@@ -33,7 +31,7 @@ var safeFields = map[string]struct{}{
 	"userid":  {},
 }
 
-func HideSafeValues(s any) {
+func hideSafeValues(s any) {
 	var ps reflect.Value
 
 	if v, ok := s.(reflect.Value); ok {
@@ -59,14 +57,14 @@ func HideSafeValues(s any) {
 
 		switch f.Type.Kind() {
 		case reflect.Struct:
-			HideSafeValues(v)
+			hideSafeValues(v)
 		case reflect.Slice:
 			for i := 0; i < v.Len(); i++ {
-				HideSafeValues(v.Index(i))
+				hideSafeValues(v.Index(i))
 			}
 		case reflect.Map:
 			for _, k := range v.MapKeys() {
-				HideSafeValues(v.MapIndex(k))
+				hideSafeValues(v.MapIndex(k))
 			}
 		default:
 			if _, ok := safeFields[strings.ToLower(f.Name)]; ok && v.CanSet() {
