@@ -11,6 +11,7 @@ import (
 	"schedule/internal/util"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -137,7 +138,7 @@ func hideSafeValues(v any) {
 	switch t := v.(type) {
 	case map[string]any:
 		for k := range t {
-			if slices.Contains(safeFields, k) {
+			if slices.Contains(safeFields, strings.ToLower(k)) {
 				t[k] = "hidden"
 			} else {
 				hideSafeValues(t[k])
@@ -159,7 +160,7 @@ func getSafeSlogValues(v url.Values) []any {
 
 	for k := range v {
 		var val string
-		if slices.Contains(safeFields, k) {
+		if slices.Contains(safeFields, strings.ToLower(k)) {
 			val = "hidden"
 		} else {
 			val = v.Get(k)
