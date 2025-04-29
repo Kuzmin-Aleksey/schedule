@@ -7,6 +7,7 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"log/slog"
 	"reflect"
+	"slices"
 	"strings"
 )
 
@@ -29,9 +30,9 @@ func interceptorLog(l *slog.Logger) logging.Logger {
 	})
 }
 
-var safeFields = map[string]struct{}{
-	"user_id": {},
-	"userid":  {},
+var safeFields = []string{
+	"user_id",
+	"userid",
 }
 
 func hideSafeValues(s any) (err error) {
@@ -50,42 +51,48 @@ func hideSafeValues(s any) (err error) {
 	}
 
 	if ps.Kind() != reflect.Ptr {
+		if !ps.CanAddr() {
+			return
+		}
 		ps = ps.Addr()
 	}
 	ps = ps.Elem()
 
 	t := ps.Type()
 
-	for i := range t.NumField() {
-		f := t.Field(i)
-		v := ps.Field(i)
+	switch t.Kind() {
+	case reflect.Struct:
+		for i := range t.NumField() {
+			f := t.Field(i)
+			v := ps.Field(i)
 
-		if !v.CanInterface() {
-			continue
+			if slices.Contains(safeFields, strings.ToLower(f.Name)) && v.CanSet() {
+				v.Set(reflect.Zero(f.Type))
+			} else {
+				if e := hideSafeValues(v); e != nil {
+					err = e
+				}
+			}
 		}
 
-		switch f.Type.Kind() {
-		case reflect.Struct:
-			if e := hideSafeValues(v); e != nil {
+	case reflect.Slice:
+		for i := 0; i < ps.Len(); i++ {
+			if e := hideSafeValues(ps.Index(i)); e != nil {
 				err = e
 			}
-		case reflect.Slice:
-			for i := 0; i < v.Len(); i++ {
-				if e := hideSafeValues(v.Index(i)); e != nil {
+		}
+	case reflect.Map:
+		for _, k := range ps.MapKeys() {
+			if slices.Contains(safeFields, strings.ToLower(k.String())) {
+				ps.SetMapIndex(k, reflect.Zero(ps.MapIndex(k).Type()))
+			} else {
+				if e := hideSafeValues(ps.MapIndex(k)); e != nil {
 					err = e
 				}
-			}
-		case reflect.Map:
-			for _, k := range v.MapKeys() {
-				if e := hideSafeValues(v.MapIndex(k)); e != nil {
-					err = e
-				}
-			}
-		default:
-			if _, ok := safeFields[strings.ToLower(f.Name)]; ok && v.CanSet() {
-				v.Set(reflect.Zero(f.Type))
 			}
 		}
+	default:
+		return
 	}
 
 	return
