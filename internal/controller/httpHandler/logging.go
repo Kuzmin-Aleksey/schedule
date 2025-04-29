@@ -3,11 +3,13 @@ package httpHandler
 import (
 	"bytes"
 	"context"
-	"encoding/json"
+	"errors"
 	"io"
 	"log/slog"
 	"net/http"
 	"net/url"
+	"schedule/internal/util"
+	"slices"
 	"strconv"
 	"time"
 )
@@ -27,13 +29,14 @@ func (r *LoggingWriter) WriteHeader(statusCode int) {
 
 func (r *LoggingWriter) Write(p []byte) (int, error) {
 	n, err := r.ResponseWriter.Write(p)
-	r.ContentLength += n
 
-	if r.ContentLength > r.MaxContentLen {
-		r.Content = nil
-	} else {
+	if r.ContentLength+n < r.MaxContentLen {
 		r.Content = append(r.Content, p...)
+	} else if r.ContentLength < r.MaxContentLen {
+		r.Content = append(r.Content, p[:r.MaxContentLen-r.ContentLength]...)
 	}
+
+	r.ContentLength += n
 
 	return n, err
 }
@@ -79,28 +82,22 @@ func (h *Handler) logRequest(r *http.Request) {
 		attrs = append(attrs, slog.Group("values", getSafeSlogValues(r.Form)...))
 	}
 
-	if _, logContent := h.logReqContent[contentType]; r.ContentLength > 0 && r.ContentLength <= h.maxLogContentReqLen && logContent {
-		content, err := io.ReadAll(r.Body)
-		if err != nil {
-			content = []byte{}
+	if _, logContent := h.logReqContent[contentType]; r.ContentLength > 0 && logContent {
+		body := make([]byte, min(r.ContentLength, h.maxLogContentReqLen))
+		if _, err := r.Body.Read(body); err != nil && !errors.Is(err, io.EOF) {
 			h.l.LogAttrs(ctx, slog.LevelError, "read request body error", slog.String("err", err.Error()))
 		}
 
 		if contentType == "application/json" {
-			var mapContent map[string]interface{}
+			unmarshalledBody := util.JsonUnmarshal(body)
+			hideSafeValues(unmarshalledBody)
 
-			if err := json.Unmarshal(content, &mapContent); err != nil {
-				h.l.ErrorContext(ctx, "unmarshal request body to map error", slog.String("err", err.Error()))
-			}
-
-			hideSafeValuesInMap(mapContent)
-
-			attrs = append(attrs, slog.Any("content", mapContent))
+			attrs = append(attrs, slog.Any("content", unmarshalledBody))
 		} else {
-			attrs = append(attrs, slog.String("content", string(content)))
+			attrs = append(attrs, slog.String("content", string(body)))
 		}
 
-		r.Body = io.NopCloser(bytes.NewReader(content))
+		r.Body = util.NewMultiReadCloser(io.NopCloser(bytes.NewReader(body)), r.Body)
 	}
 
 	h.l.LogAttrs(ctx, slog.LevelInfo, "request received", attrs...)
@@ -117,17 +114,11 @@ func (h *Handler) logResponse(ctx context.Context, r *LoggingWriter, handleDurat
 	}
 
 	if _, logContent := h.logRespContent[contentType]; len(r.Content) > 0 && logContent {
-
 		if contentType == "application/json" {
-			var mapContent map[string]interface{}
+			unmarshalledBody := util.JsonUnmarshal(r.Content)
+			hideSafeValues(unmarshalledBody)
 
-			if err := json.Unmarshal(r.Content, &mapContent); err != nil {
-				h.l.ErrorContext(ctx, "unmarshal response body to map error", slog.String("err", err.Error()))
-			}
-
-			hideSafeValuesInMap(mapContent)
-
-			attrs = append(attrs, slog.Any("content", mapContent))
+			attrs = append(attrs, slog.Any("content", unmarshalledBody))
 		} else {
 			attrs = append(attrs, slog.String("content", string(r.Content)))
 		}
@@ -136,20 +127,25 @@ func (h *Handler) logResponse(ctx context.Context, r *LoggingWriter, handleDurat
 	h.l.LogAttrs(ctx, slog.LevelInfo, "response sent", attrs...)
 }
 
-var safeFields = map[string]struct{}{
-	"user_id": {},
-	"userid":  {},
-	"user-id": {},
+var safeFields = []string{
+	"user_id",
+	"userid",
+	"user-id",
 }
 
-func hideSafeValuesInMap(m map[string]any) {
-	for k := range m {
-		if _, ok := m[k].(map[string]any); ok {
-			hideSafeValuesInMap(m[k].(map[string]any))
+func hideSafeValues(v any) {
+	switch t := v.(type) {
+	case map[string]any:
+		for k := range t {
+			if slices.Contains(safeFields, k) {
+				t[k] = "hidden"
+			} else {
+				hideSafeValues(t[k])
+			}
 		}
-
-		if _, ok := safeFields[k]; ok {
-			m[k] = "hidden"
+	case []any:
+		for i := range t {
+			hideSafeValues(t[i])
 		}
 	}
 }
@@ -163,7 +159,7 @@ func getSafeSlogValues(v url.Values) []any {
 
 	for k := range v {
 		var val string
-		if _, ok := safeFields[k]; ok {
+		if slices.Contains(safeFields, k) {
 			val = "hidden"
 		} else {
 			val = v.Get(k)
