@@ -91,6 +91,7 @@ func (uc *Usecase) GetByUser(ctx context.Context, userId int64) ([]int, error) {
 	for _, schedule := range schedules {
 		uc.setScheduleEndHour(location, &schedule)
 		if schedule.EndAt == nil || schedule.EndAt.After(now) {
+			uc.l.DebugContext(ctx, "add schedule", "schedule", schedule)
 			ids = append(ids, schedule.Id)
 		} else {
 			uc.l.DebugContext(ctx, "schedule expired", "schedule", schedule)
@@ -132,14 +133,15 @@ func (uc *Usecase) GetTimetable(ctx context.Context, userId int64, scheduleId in
 	}
 
 	if schedule.EndAt != nil && schedule.EndAt.Before(now) {
+		uc.l.DebugContext(ctx, "schedule are expired", "schedule", schedule)
 		return dto, nil
 	}
 
-	startOfCurrentDay := time.Date(now.Year(), now.Month(), now.Day(), uc.cfg.BeginDayHour, 0, 0, 0, location)
+	beginOfCurrentDay := time.Date(now.Year(), now.Month(), now.Day(), uc.cfg.BeginDayHour, 0, 0, 0, location)
 	endOfCurrentDay := time.Date(now.Year(), now.Month(), now.Day(), uc.cfg.EndDayHour, 0, 0, 0, location)
 
 	for i := 0; ; i++ {
-		timestamp := startOfCurrentDay.Add(time.Duration(i) * schedule.Period)
+		timestamp := beginOfCurrentDay.Add(time.Duration(i) * schedule.Period)
 		timestamp = timestamp.Round(uc.cfg.TimeRound)
 
 		if endOfCurrentDay.Before(timestamp) {
@@ -180,18 +182,24 @@ func (uc *Usecase) GetNextTakings(ctx context.Context, userId int64) ([]NextTaki
 		for i := 0; ; i++ {
 			timestamp := beginOfCurrentDay.Add(time.Duration(i) * schedule.Period)
 			timestamp = timestamp.Round(uc.cfg.TimeRound)
+			uc.l.DebugContext(ctx, "checking timestamp", "timestamp", timestamp)
 
 			if schedule.EndAt != nil && timestamp.After(*schedule.EndAt) { // if schedule end
-				uc.l.DebugContext(ctx, "schedule expired", "schedule", schedule)
+				uc.l.DebugContext(ctx, "schedule expired", "schedule", schedule, "timestamp", timestamp)
 				break
 			}
 
 			if timestamp.After(nextTakingPeriod) {
-				uc.l.DebugContext(ctx, "schedule out of period", "schedule", schedule)
+				uc.l.DebugContext(ctx, "schedule out of period", "schedule", schedule, "timestamp", timestamp)
 				break
 			}
 
-			if timestamp.After(now) && timestamp.Hour() >= uc.cfg.BeginDayHour && timestamp.Hour() < uc.cfg.EndDayHour {
+			if !(timestamp.Hour() >= uc.cfg.BeginDayHour && timestamp.Hour() < uc.cfg.EndDayHour) {
+				uc.l.DebugContext(ctx, "now night", "schedule", schedule, "timestamp", timestamp)
+				continue
+			}
+
+			if timestamp.After(now) {
 				nextTaking := NextTakingResponseDTO{
 					Id:         schedule.Id,
 					Name:       schedule.Name,
@@ -205,8 +213,6 @@ func (uc *Usecase) GetNextTakings(ctx context.Context, userId int64) ([]NextTaki
 				dto = util.InsertFunc(dto, nextTaking, func(v NextTakingResponseDTO) bool { // make sorted result
 					return nextTaking.NextTaking.Before(v.NextTaking)
 				})
-
-				break
 			}
 		}
 	}
@@ -218,6 +224,6 @@ func (uc *Usecase) GetNextTakings(ctx context.Context, userId int64) ([]NextTaki
 
 func (uc *Usecase) setScheduleEndHour(loc *time.Location, s *entity.Schedule) { // in db this is DATE type without time
 	if s.EndAt != nil {
-		*s.EndAt = (*s.EndAt).Add(time.Duration(uc.cfg.EndDayHour) * time.Hour).In(loc)
+		*s.EndAt = time.Date(s.EndAt.Year(), s.EndAt.Month(), s.EndAt.Day(), uc.cfg.EndDayHour, 0, 0, 0, loc)
 	}
 }
