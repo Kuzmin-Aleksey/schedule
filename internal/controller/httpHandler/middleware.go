@@ -27,8 +27,6 @@ func (h *Handler) mwWithLocation(next http.HandlerFunc) http.HandlerFunc {
 			loc = time.UTC // default
 		}
 
-		//h.l.Debug("user time: ", time.Now().In(loc).Format("2006-01-02 15:04:05 -07:00"))
-
 		ctx := schedule.CtxWithLocation(r.Context(), loc)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
@@ -44,7 +42,6 @@ func (h *Handler) MwAddTraceId(next http.Handler) http.Handler {
 		}
 
 		ctx := context.WithValue(r.Context(), logger.TraceIdKey{}, traceId)
-		r.WithContext(ctx)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
