@@ -61,7 +61,7 @@ func Run(cfg *config.Config) {
 	<-shutdown
 
 	if err := httpServer.Shutdown(context.Background()); err != nil {
-		l.Error("shutdown http server failed:", err)
+		log.Println("shutdown http server failed:", err)
 	}
 
 	grpcServer.GracefulStop()
