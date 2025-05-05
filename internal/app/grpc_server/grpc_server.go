@@ -79,7 +79,7 @@ func traceIdUnaryInterceptor(ctx context.Context, req any, _ *grpc.UnaryServerIn
 		grpc.SetHeader(ctx, header)
 	}
 
-	ctx = context.WithValue(ctx, logger.TraceIdKey, traceId)
+	ctx = context.WithValue(ctx, logger.TraceIdKey{}, traceId)
 
 	return handler(ctx, req)
 }

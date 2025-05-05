@@ -43,7 +43,7 @@ func (h *Handler) MwAddTraceId(next http.Handler) http.Handler {
 			w.Header().Set("X-Trace-Id", traceId)
 		}
 
-		ctx := context.WithValue(r.Context(), logger.TraceIdKey, traceId)
+		ctx := context.WithValue(r.Context(), logger.TraceIdKey{}, traceId)
 		r.WithContext(ctx)
 
 		next.ServeHTTP(w, r.WithContext(ctx))

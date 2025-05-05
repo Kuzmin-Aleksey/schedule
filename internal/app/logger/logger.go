@@ -15,17 +15,17 @@ const (
 	LogFormatText = "text"
 )
 
-const TraceIdKey = "trace_id"
+type TraceIdKey struct{}
 
 type logHandler struct {
 	slog.Handler
 }
 
 func (h *logHandler) Handle(ctx context.Context, r slog.Record) error {
-	traceId, _ := ctx.Value(TraceIdKey).(string)
+	traceId, _ := ctx.Value(TraceIdKey{}).(string)
 
 	if traceId != "" {
-		r.AddAttrs(slog.String(TraceIdKey, traceId))
+		r.AddAttrs(slog.String("trace_id", traceId))
 	}
 
 	return h.Handler.Handle(ctx, r)
