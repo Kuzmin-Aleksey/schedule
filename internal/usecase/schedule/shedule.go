@@ -194,7 +194,7 @@ func (uc *Usecase) GetNextTakings(ctx context.Context, userId int64) ([]NextTaki
 				break
 			}
 
-			if !(timestamp.Hour() >= uc.cfg.BeginDayHour && timestamp.Hour() < uc.cfg.EndDayHour) {
+			if timestamp.Hour() < uc.cfg.BeginDayHour || timestamp.Hour() >= uc.cfg.EndDayHour {
 				uc.l.DebugContext(ctx, "now night", "schedule", schedule, "timestamp", timestamp)
 				continue
 			}
