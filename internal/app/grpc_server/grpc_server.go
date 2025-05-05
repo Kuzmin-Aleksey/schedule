@@ -10,17 +10,11 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"log/slog"
-	"schedule/config"
 	"schedule/internal/app/logger"
 	"schedule/internal/controller/grpcHandler"
 	"schedule/internal/usecase/schedule"
 	"schedule/internal/util"
 )
-
-type GrpcServer struct {
-	server *grpc.Server
-	cfg    *config.Config
-}
 
 func NewGrpcServer(l *slog.Logger, schedule *schedule.Usecase) *grpc.Server {
 	loggingOpts := []logging.Option{
