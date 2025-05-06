@@ -2,20 +2,20 @@ package grpcServer
 
 import (
 	"schedule/internal/domain/entity"
-	value2 "schedule/internal/domain/value"
+	"schedule/internal/domain/value"
 	schedulev1 "schedule/internal/server/grpcServer/gen"
 )
 
 func newDomainScheduleWithDuration(req *schedulev1.CreateScheduleRequest) *entity.ScheduleWithDuration {
 	return &entity.ScheduleWithDuration{
-		UserId:   value2.UserId(req.GetUserId()),
-		Name:     value2.ScheduleName(req.GetName()),
-		Duration: value2.ScheduleDuration(req.GetDuration()),
-		Period:   value2.SchedulePeriod(req.GetPeriod()),
+		UserId:   value.UserId(req.GetUserId()),
+		Name:     value.ScheduleName(req.GetName()),
+		Duration: value.ScheduleDuration(req.GetDuration()),
+		Period:   value.SchedulePeriod(req.GetPeriod()),
 	}
 }
 
-func newGRPCCreateScheduleReply(scheduleId value2.ScheduleId) *schedulev1.CreateScheduleReply {
+func newGRPCCreateScheduleReply(scheduleId value.ScheduleId) *schedulev1.CreateScheduleReply {
 	return &schedulev1.CreateScheduleReply{
 		Id: int32(scheduleId),
 	}
@@ -39,7 +39,7 @@ func newGRPCGetTimetableReply(timetable *entity.ScheduleTimetable) *schedulev1.G
 	return grpcResp
 }
 
-func newGRPCGetByUserReply(ids []value2.ScheduleId) *schedulev1.GetByUserReply {
+func newGRPCGetByUserReply(ids []value.ScheduleId) *schedulev1.GetByUserReply {
 	grpcIds := make([]int32, len(ids))
 	for i, id := range ids {
 		grpcIds[i] = int32(id)

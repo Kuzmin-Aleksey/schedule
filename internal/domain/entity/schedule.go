@@ -2,30 +2,30 @@ package entity
 
 import (
 	"errors"
-	value2 "schedule/internal/domain/value"
+	"schedule/internal/domain/value"
 	"time"
 )
 
 const (
 	MaxMedicineNameLen = 255
-	MinSchedulePeriod  = value2.SchedulePeriod(time.Hour)
-	MaxSchedulePeriod  = value2.SchedulePeriod(time.Hour * 24)
+	MinSchedulePeriod  = value.SchedulePeriod(time.Hour)
+	MaxSchedulePeriod  = value.SchedulePeriod(time.Hour * 24)
 )
 
 type Schedule struct {
-	Id     value2.ScheduleId     `db:"id"`
-	UserId value2.UserId         `db:"user_id" json:"-"` // med police 16 digits, always int64
-	Name   value2.ScheduleName   `db:"name"`
-	EndAt  value2.ScheduleEndAt  `db:"end_at"`
-	Period value2.SchedulePeriod `db:"period"`
+	Id     value.ScheduleId     `db:"id"`
+	UserId value.UserId         `db:"user_id" json:"-"` // med police 16 digits, always int64
+	Name   value.ScheduleName   `db:"name"`
+	EndAt  value.ScheduleEndAt  `db:"end_at"`
+	Period value.SchedulePeriod `db:"period"`
 }
 
 type ScheduleWithDuration struct {
-	Id       value2.ScheduleId
-	UserId   value2.UserId
-	Name     value2.ScheduleName
-	Duration value2.ScheduleDuration
-	Period   value2.SchedulePeriod
+	Id       value.ScheduleId
+	UserId   value.UserId
+	Name     value.ScheduleName
+	Duration value.ScheduleDuration
+	Period   value.SchedulePeriod
 }
 
 func (t ScheduleWithDuration) Validate() error {
@@ -45,17 +45,17 @@ func (t ScheduleWithDuration) Validate() error {
 }
 
 type ScheduleNextTaking struct {
-	Id         value2.ScheduleId
-	Name       value2.ScheduleName
-	EndAt      value2.ScheduleEndAt
-	Period     value2.SchedulePeriod
-	NextTaking value2.ScheduleNextTaking
+	Id         value.ScheduleId
+	Name       value.ScheduleName
+	EndAt      value.ScheduleEndAt
+	Period     value.SchedulePeriod
+	NextTaking value.ScheduleNextTaking
 }
 
 type ScheduleTimetable struct {
-	Id        value2.ScheduleId
-	Name      value2.ScheduleName
-	EndAt     value2.ScheduleEndAt
-	Period    value2.SchedulePeriod
-	Timetable value2.ScheduleTimeTable
+	Id        value.ScheduleId
+	Name      value.ScheduleName
+	EndAt     value.ScheduleEndAt
+	Period    value.SchedulePeriod
+	Timetable value.ScheduleTimeTable
 }

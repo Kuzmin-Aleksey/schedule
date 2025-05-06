@@ -3,7 +3,7 @@ package rest
 import (
 	"encoding/json"
 	"net/http"
-	value2 "schedule/internal/domain/value"
+	"schedule/internal/domain/value"
 	"schedule/internal/server/rest/models"
 )
 
@@ -39,7 +39,7 @@ func (h *Handler) createSchedule(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) getUserSchedules(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	userId, err := value2.ParseUserId(r.FormValue("user_id"))
+	userId, err := value.ParseUserId(r.FormValue("user_id"))
 	if err != nil {
 		h.writeAndLogErr(ctx, w, err, http.StatusBadRequest)
 		return
@@ -57,12 +57,12 @@ func (h *Handler) getUserSchedules(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) getSchedule(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	userId, err := value2.ParseUserId(r.FormValue("user_id"))
+	userId, err := value.ParseUserId(r.FormValue("user_id"))
 	if err != nil {
 		h.writeAndLogErr(ctx, w, err, http.StatusBadRequest)
 		return
 	}
-	scheduleId, err := value2.ParseScheduleId(r.FormValue("schedule_id"))
+	scheduleId, err := value.ParseScheduleId(r.FormValue("schedule_id"))
 	if err != nil {
 		h.writeAndLogErr(ctx, w, err, http.StatusBadRequest)
 		return
@@ -80,7 +80,7 @@ func (h *Handler) getSchedule(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) scheduleGetNextTakings(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	userId, err := value2.ParseUserId(r.FormValue("user_id"))
+	userId, err := value.ParseUserId(r.FormValue("user_id"))
 	if err != nil {
 		h.writeAndLogErr(ctx, w, err, http.StatusBadRequest)
 		return

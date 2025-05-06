@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/status"
 	"log/slog"
 	"schedule/internal/domain/usecase/schedule"
-	value2 "schedule/internal/domain/value"
+	"schedule/internal/domain/value"
 	"schedule/internal/server/grpcServer/gen"
 )
 
@@ -54,7 +54,7 @@ func (s *scheduleAPI) GetTimetable(ctx context.Context, req *schedulev1.GetTimet
 		return nil, status.Error(codes.InvalidArgument, "schedule id is required")
 	}
 
-	resp, err := s.schedule.GetTimetable(ctx, value2.UserId(req.GetUserId()), value2.ScheduleId(req.GetScheduleId()))
+	resp, err := s.schedule.GetTimetable(ctx, value.UserId(req.GetUserId()), value.ScheduleId(req.GetScheduleId()))
 	if err != nil {
 		s.l.LogAttrs(ctx, slog.LevelError, "handling request error", slog.String("err", err.Error()))
 		return nil, status.Error(codes.Internal, errInternal)
@@ -68,7 +68,7 @@ func (s *scheduleAPI) GetByUser(ctx context.Context, req *schedulev1.GetByUserRe
 		return nil, status.Error(codes.InvalidArgument, "user id is required")
 	}
 
-	ids, err := s.schedule.GetByUser(ctx, value2.UserId(req.GetUserId()))
+	ids, err := s.schedule.GetByUser(ctx, value.UserId(req.GetUserId()))
 	if err != nil {
 		s.l.LogAttrs(ctx, slog.LevelError, "handling request error", slog.String("err", err.Error()))
 		return nil, status.Error(codes.Internal, errInternal)
@@ -82,7 +82,7 @@ func (s *scheduleAPI) GetNextTakings(ctx context.Context, req *schedulev1.GetNex
 		return nil, status.Error(codes.InvalidArgument, "user id is required")
 	}
 
-	nextTakings, err := s.schedule.GetNextTakings(ctx, value2.UserId(req.GetUserId()))
+	nextTakings, err := s.schedule.GetNextTakings(ctx, value.UserId(req.GetUserId()))
 	if err != nil {
 		s.l.ErrorContext(ctx, "GetNextTakings failed", "err", err)
 		return nil, status.Error(codes.Internal, errInternal)
