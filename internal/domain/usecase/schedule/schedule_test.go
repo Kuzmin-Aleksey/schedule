@@ -4,13 +4,11 @@ import (
 	"bou.ke/monkey"
 	"context"
 	"fmt"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"log/slog"
 	"schedule/internal/app/logger"
 	"schedule/internal/config"
 	"schedule/internal/domain/entity"
-	"schedule/internal/domain/usecase/schedule/mocks"
 	"schedule/internal/domain/value"
 	"schedule/internal/util"
 	"testing"
@@ -85,10 +83,8 @@ func init() {
 	}
 }
 
-func TestGetByUser(t *testing.T) {
-	r := mocks.NewRepo(t)
-
-	uc := NewUsecase(r, l, testConfig)
+func TestGetActualSchedulesIds(t *testing.T) {
+	uc := NewUsecase(nil, l, testConfig)
 
 	testCases := []struct {
 		Location *time.Location
@@ -109,116 +105,90 @@ func TestGetByUser(t *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		r.On("GetByUser", mock.Anything, value.UserId(i)).Return(testSchedules, nil)
+		ctx := context.Background()
+		now := time.Now().In(testCase.Location)
 
-		ctx := CtxWithLocation(context.Background(), testCase.Location)
+		ids := uc.getActualSchedulesIds(ctx, testSchedules, now, testCase.Location)
 
-		ids, err := uc.GetByUser(ctx, value.UserId(i))
-
-		require.NoError(t, err)
 		require.Equalf(t, testCase.Expected, ids, "test case: %d", i+1)
 	}
 
 }
 
 func TestGetSchedule(t *testing.T) {
-	expected := []*entity.ScheduleTimetable{
+	testSchedules := []entity.Schedule{
+		testSchedules[0],
+		testSchedules[1],
+		testSchedules[3],
+		testSchedules[4],
 		{
-			Id:     testSchedules[0].Id,
-			Name:   testSchedules[0].Name,
-			EndAt:  testSchedules[0].EndAt,
-			Period: testSchedules[0].Period,
-			Timetable: value.ScheduleTimeTable{
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 8)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 9)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 10)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 11)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 12)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 13)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 14)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 15)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 16)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 17)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 18)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 19)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 20)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 21)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 22)),
-			},
+			Id:     6,
+			UserId: testUser,
+			Name:   "Test Schedule 6",
+			Period: value.SchedulePeriod(day),
 		},
-		{
-			Id:     testSchedules[1].Id,
-			Name:   testSchedules[1].Name,
-			EndAt:  testSchedules[1].EndAt,
-			Period: testSchedules[1].Period,
-			Timetable: value.ScheduleTimeTable{
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 8)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 20)),
-			},
-		},
-		{
-			Id:        testSchedules[2].Id,
-			Name:      testSchedules[2].Name,
-			EndAt:     testSchedules[2].EndAt,
-			Period:    testSchedules[2].Period,
-			Timetable: value.ScheduleTimeTable{},
-		},
-		{
-			Id:     testSchedules[3].Id,
-			Name:   testSchedules[3].Name,
-			EndAt:  testSchedules[3].EndAt,
-			Period: testSchedules[3].Period,
-			Timetable: value.ScheduleTimeTable{
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 8)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 9)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 10)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 11)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour*12 + time.Minute*15)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour*13 + time.Minute*15)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour*14 + time.Minute*15)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour*15 + time.Minute*15)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour*16 + time.Minute*15)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour*17 + time.Minute*15)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour*18 + time.Minute*15)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour*19 + time.Minute*15)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour*20 + time.Minute*30)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour*21 + time.Minute*30)),
-			},
-		},
-		{
-			Id:     testSchedules[4].Id,
-			Name:   testSchedules[4].Name,
-			EndAt:  testSchedules[4].EndAt,
-			Period: testSchedules[4].Period,
-			Timetable: value.ScheduleTimeTable{
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 8)),
-				value.NewScheduleTimeTableItem(date().Add(time.Hour * 22)),
-			},
-		},
-	}
-	for _, s := range expected {
-		if !s.EndAt.IsNil() {
-			s.EndAt = value.NewScheduleEndAt(util.Ptr(time.Date(s.EndAt.Year(), s.EndAt.Month(), s.EndAt.Day(), testConfig.EndDayHour, 0, 0, 0, time.UTC)))
-			t.Log("set end at hour:", s.EndAt)
-		}
 	}
 
-	r := mocks.NewRepo(t)
-	uc := NewUsecase(r, l, testConfig)
+	expected := []value.ScheduleTimeTable{
+		{ // 0
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 8)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 9)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 10)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 11)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 12)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 13)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 14)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 15)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 16)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 17)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 18)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 19)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 20)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 21)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 22)),
+		},
+		{ // 1
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 8)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 20)),
+		},
+		{ // 3
+
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 8)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 9)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 10)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 11)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour*12 + time.Minute*15)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour*13 + time.Minute*15)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour*14 + time.Minute*15)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour*15 + time.Minute*15)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour*16 + time.Minute*15)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour*17 + time.Minute*15)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour*18 + time.Minute*15)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour*19 + time.Minute*15)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour*20 + time.Minute*30)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour*21 + time.Minute*30)),
+		},
+		{ // 4
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 8)),
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 22)),
+		},
+		{
+			value.NewScheduleTimeTableItem(date().Add(time.Hour * 8)),
+		},
+	}
+
+	uc := NewUsecase(nil, l, testConfig)
 
 	for i, testSchedule := range testSchedules {
 
-		r.On("GetById", mock.Anything, testUser, testSchedule.Id).Return(&testSchedule, nil)
+		resp := uc.makeTimetable(context.Background(), &testSchedule, time.Now(), time.UTC)
 
-		resp, err := uc.GetTimetable(context.Background(), testSchedule.UserId, testSchedule.Id)
-		require.NoError(t, err)
-		require.Equal(t, expected[i], resp)
+		require.Equalf(t, expected[i], resp, "test case: %d", i+1)
 	}
 }
 
 func TestGetNextTaking(t *testing.T) {
-	r := mocks.NewRepo(t)
-	uc := NewUsecase(r, l, testConfig)
+	uc := NewUsecase(nil, l, testConfig)
 
 	testCases := []struct {
 		Location         *time.Location
@@ -386,15 +356,13 @@ func TestGetNextTaking(t *testing.T) {
 
 		uc.cfg.NextTakingPeriod = c.NextTakingPeriod
 
-		r.On("GetByUser", mock.Anything, value.UserId(i)).Return(testSchedules, nil)
+		ctx := context.Background()
+		now := time.Now().In(c.Location)
 
-		ctx := CtxWithLocation(context.Background(), c.Location)
+		resp := uc.findNextTakings(ctx, testSchedules, now, c.Location)
 
-		resp, err := uc.GetNextTakings(ctx, value.UserId(i))
-		require.NoError(t, err)
 		require.Equalf(t, c.Expected, resp, "test case: %d", i+1)
 	}
-
 }
 
 func date(loc ...*time.Location) time.Time {
