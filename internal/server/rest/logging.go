@@ -42,25 +42,25 @@ func (r *LoggingWriter) Write(p []byte) (int, error) {
 	return n, err
 }
 
-func (h *Handler) mwLogging(next http.Handler) http.Handler {
+func (s *Server) mwLogging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		h.logRequest(r)
+		s.logRequest(r)
 
 		customWriter := &LoggingWriter{
 			ResponseWriter: w,
 			StatusCode:     http.StatusOK,
-			MaxContentLen:  h.maxLogContentRespLen,
+			MaxContentLen:  s.cfg.MaxResponseContentLen,
 		}
 
 		start := time.Now()
 		next.ServeHTTP(customWriter, r)
 		end := time.Now()
 
-		h.logResponse(r.Context(), customWriter, end.Sub(start))
+		s.logResponse(r.Context(), customWriter, end.Sub(start))
 	})
 }
 
-func (h *Handler) logRequest(r *http.Request) {
+func (s *Server) logRequest(r *http.Request) {
 	ctx := r.Context()
 
 	contentType := r.Header.Get("Content-Type")
@@ -83,10 +83,10 @@ func (h *Handler) logRequest(r *http.Request) {
 		attrs = append(attrs, slog.Group("values", getSafeSlogValues(r.Form)...))
 	}
 
-	if _, logContent := h.logReqContent[contentType]; r.ContentLength > 0 && logContent {
-		body := make([]byte, min(r.ContentLength, h.maxLogContentReqLen))
+	if slices.Contains(s.cfg.RequestLoggingContent, contentType) && r.ContentLength > 0 {
+		body := make([]byte, min(r.ContentLength, int64(s.cfg.MaxRequestContentLen)))
 		if _, err := r.Body.Read(body); err != nil && !errors.Is(err, io.EOF) {
-			h.l.LogAttrs(ctx, slog.LevelError, "read request body error", slog.String("err", err.Error()))
+			s.l.LogAttrs(ctx, slog.LevelError, "read request body error", slog.String("err", err.Error()))
 		}
 
 		if contentType == "application/json" {
@@ -101,10 +101,10 @@ func (h *Handler) logRequest(r *http.Request) {
 		r.Body = util.NewMultiReadCloser(io.NopCloser(bytes.NewReader(body)), r.Body)
 	}
 
-	h.l.LogAttrs(ctx, slog.LevelInfo, "request received", attrs...)
+	s.l.LogAttrs(ctx, slog.LevelInfo, "request received", attrs...)
 }
 
-func (h *Handler) logResponse(ctx context.Context, r *LoggingWriter, handleDuration time.Duration) {
+func (s *Server) logResponse(ctx context.Context, r *LoggingWriter, handleDuration time.Duration) {
 	contentType := r.Header().Get("Content-Type")
 
 	attrs := []slog.Attr{
@@ -114,7 +114,7 @@ func (h *Handler) logResponse(ctx context.Context, r *LoggingWriter, handleDurat
 		slog.Int("content_len", r.ContentLength),
 	}
 
-	if _, logContent := h.logRespContent[contentType]; len(r.Content) > 0 && logContent {
+	if slices.Contains(s.cfg.ResponseLoggingContent, contentType) && len(r.Content) > 0 {
 		if contentType == "application/json" {
 			unmarshalledBody := util.JsonUnmarshal(r.Content)
 			hideSafeValues(unmarshalledBody)
@@ -125,7 +125,7 @@ func (h *Handler) logResponse(ctx context.Context, r *LoggingWriter, handleDurat
 		}
 	}
 
-	h.l.LogAttrs(ctx, slog.LevelInfo, "response sent", attrs...)
+	s.l.LogAttrs(ctx, slog.LevelInfo, "response sent", attrs...)
 }
 
 var safeFields = []string{

@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"github.com/gorilla/mux"
 	"log"
 	"log/slog"
 	"net"
@@ -70,11 +71,15 @@ func Run(cfg *config.Config) {
 }
 
 func newHttpServer(l *slog.Logger, schedule *schedule.Usecase, cfg config.HttpServerConfig) *http.Server {
-	handler := rest.NewHandler(l, &cfg.Log)
-	handler.SetScheduleRoutes(schedule)
+	base := rest.NewBase(l)
+	restScheduleServer := rest.NewScheduleServer(schedule, base)
+	restServer := rest.NewServer(restScheduleServer, l, &cfg.Log)
+
+	rtr := mux.NewRouter()
+	restServer.RegisterRoutes(rtr)
 
 	return &http.Server{
-		Handler:      handler,
+		Handler:      rtr,
 		Addr:         cfg.Addr,
 		ReadTimeout:  cfg.ReadTimeout,
 		WriteTimeout: cfg.WriteTimeout,
