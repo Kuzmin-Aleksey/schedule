@@ -24,7 +24,7 @@ func Register(server *grpc.Server, schedule *schedule.Usecase, l *slog.Logger) {
 	})
 }
 
-const errInternal = "internal error"
+var errInternal = status.Error(codes.Internal, "internal error")
 
 func (s *scheduleAPI) CreateSchedule(ctx context.Context, req *schedulev1.CreateScheduleRequest) (*schedulev1.CreateScheduleReply, error) {
 	if req.GetUserId() == 0 {
@@ -40,7 +40,7 @@ func (s *scheduleAPI) CreateSchedule(ctx context.Context, req *schedulev1.Create
 	resp, err := s.schedule.Create(ctx, newDomainScheduleWithDuration(req))
 	if err != nil {
 		s.l.LogAttrs(ctx, slog.LevelError, "handling request error", slog.String("err", err.Error()))
-		return nil, status.Error(codes.Internal, errInternal)
+		return nil, errInternal
 	}
 
 	return newGRPCCreateScheduleReply(resp), nil
@@ -57,7 +57,7 @@ func (s *scheduleAPI) GetTimetable(ctx context.Context, req *schedulev1.GetTimet
 	resp, err := s.schedule.GetTimetable(ctx, value.UserId(req.GetUserId()), value.ScheduleId(req.GetScheduleId()))
 	if err != nil {
 		s.l.LogAttrs(ctx, slog.LevelError, "handling request error", slog.String("err", err.Error()))
-		return nil, status.Error(codes.Internal, errInternal)
+		return nil, errInternal
 	}
 
 	return newGRPCGetTimetableReply(resp), nil
@@ -71,7 +71,7 @@ func (s *scheduleAPI) GetByUser(ctx context.Context, req *schedulev1.GetByUserRe
 	ids, err := s.schedule.GetByUser(ctx, value.UserId(req.GetUserId()))
 	if err != nil {
 		s.l.LogAttrs(ctx, slog.LevelError, "handling request error", slog.String("err", err.Error()))
-		return nil, status.Error(codes.Internal, errInternal)
+		return nil, errInternal
 	}
 
 	return newGRPCGetByUserReply(ids), nil
@@ -85,7 +85,7 @@ func (s *scheduleAPI) GetNextTakings(ctx context.Context, req *schedulev1.GetNex
 	nextTakings, err := s.schedule.GetNextTakings(ctx, value.UserId(req.GetUserId()))
 	if err != nil {
 		s.l.ErrorContext(ctx, "GetNextTakings failed", "err", err)
-		return nil, status.Error(codes.Internal, errInternal)
+		return nil, errInternal
 	}
 
 	return newGRPCGetNextTakingsReply(nextTakings), nil
