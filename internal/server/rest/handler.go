@@ -1,4 +1,4 @@
-package httpHandler
+package rest
 
 import (
 	"github.com/gorilla/mux"
@@ -38,7 +38,7 @@ func NewHandler(l *slog.Logger, logCfg *config.HttpLog) *Handler {
 	}
 
 	h.rtr.Use(
-		h.MwAddTraceId,
+		h.mwAddTraceId,
 		h.mwLogging,
 	)
 

@@ -6,10 +6,10 @@ gen-swagger:
 
 # generate api models using swagger
 gen-api-model:
-     oapi-codegen --package models --generate models --o internal/controller/httpHandler/models/models.go docs/openapi.json
+     oapi-codegen --package models --generate models --o internal/controller/httpHandler/models/models.go api/openapi.json
 
 gen-proto:
-    protoc -I proto proto/schedule.proto --go_out=./gen-proto --go_opt=paths=source_relative --go-grpc_out=./gen-proto --go-grpc_opt=paths=source_relative
+    protoc -I proto proto/schedule.proto --go_out=./internal/server/grpcServer/gen --go_opt=paths=source_relative --go-grpc_out=./internal/server/grpcServer/gen --go-grpc_opt=paths=source_relative
 
 lint:
     golangci-lint run -D errcheck

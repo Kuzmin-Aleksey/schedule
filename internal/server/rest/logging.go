@@ -1,4 +1,4 @@
-package httpHandler
+package rest
 
 import (
 	"bytes"

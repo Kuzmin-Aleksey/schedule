@@ -1,4 +1,4 @@
-package httpHandler
+package rest
 
 import (
 	"context"
@@ -33,12 +33,14 @@ func (h *Handler) mwWithLocation(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func (h *Handler) MwAddTraceId(next http.Handler) http.Handler {
+const headerTraceId = "X-Trace-Id"
+
+func (h *Handler) mwAddTraceId(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		traceId := r.Header.Get("X-Trace-Id")
+		traceId := r.Header.Get(headerTraceId)
 		if traceId == "" {
 			traceId = uuid.NewString()
-			w.Header().Set("X-Trace-Id", traceId)
+			w.Header().Set(headerTraceId, traceId)
 		}
 
 		ctx := context.WithValue(r.Context(), logger.TraceIdKey{}, traceId)

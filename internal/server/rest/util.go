@@ -1,11 +1,11 @@
-package httpHandler
+package rest
 
 import (
 	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"schedule/internal/controller/httpHandler/models"
+	"schedule/internal/server/rest/models"
 )
 
 const errEncodingJson = "json encode error"

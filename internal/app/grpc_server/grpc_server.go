@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 	"log/slog"
 	"schedule/internal/app/logger"
-	"schedule/internal/controller/grpcHandler"
+	"schedule/internal/server/grpcServer"
 	"schedule/internal/usecase/schedule"
 	"schedule/internal/util"
 )
@@ -29,14 +29,14 @@ func NewGrpcServer(l *slog.Logger, schedule *schedule.Usecase) *grpc.Server {
 		}),
 	}
 
-	grpcServer := grpc.NewServer(grpc.ChainUnaryInterceptor(
+	server := grpc.NewServer(grpc.ChainUnaryInterceptor(
 		traceIdUnaryInterceptor,
 		timezoneUnaryInterceptor,
 		recovery.UnaryServerInterceptor(recoveryOpts...),
 		logging.UnaryServerInterceptor(interceptorLog(l), loggingOpts...),
 	))
-	grpcHandler.Register(grpcServer, schedule, l)
-	return grpcServer
+	grpcServer.Register(server, schedule, l)
+	return server
 }
 
 func timezoneUnaryInterceptor(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {

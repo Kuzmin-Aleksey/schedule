@@ -1,4 +1,4 @@
-package grpcHandler
+package grpcServer
 
 import (
 	"context"
@@ -6,13 +6,13 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"log/slog"
-	"schedule/gen-proto"
+	"schedule/internal/server/grpcServer/gen"
 	"schedule/internal/usecase/schedule"
 	"time"
 )
 
 type scheduleAPI struct {
-	schedulev1.UnimplementedScheduleServer
+	schedulev1.ScheduleServer
 	schedule *schedule.Usecase
 	l        *slog.Logger
 }

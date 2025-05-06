@@ -1,9 +1,9 @@
-package httpHandler
+package rest
 
 import (
 	"encoding/json"
 	"net/http"
-	"schedule/internal/controller/httpHandler/models"
+	"schedule/internal/server/rest/models"
 	"schedule/internal/usecase/schedule"
 	"strconv"
 	"time"
