@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"net/http"
 	"schedule/internal/app/logger"
-	"schedule/internal/usecase/schedule"
+	"schedule/internal/domain/usecase/schedule"
 	"schedule/internal/util"
 	"time"
 )

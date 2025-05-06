@@ -4,8 +4,8 @@ import (
 	"github.com/gorilla/mux"
 	"log/slog"
 	"net/http"
-	"schedule/config"
-	"schedule/internal/usecase/schedule"
+	"schedule/internal/config"
+	"schedule/internal/domain/usecase/schedule"
 )
 
 type Handler struct {

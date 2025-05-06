@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 	"os"
-	"schedule/config"
 	"schedule/internal/app"
+	"schedule/internal/config"
 )
 
 func main() {

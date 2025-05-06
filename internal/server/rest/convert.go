@@ -1,27 +1,27 @@
 package rest
 
 import (
-	"schedule/internal/entity"
+	"schedule/internal/domain/entity"
+	value2 "schedule/internal/domain/value"
 	"schedule/internal/server/rest/models"
-	"schedule/internal/value"
 )
 
 func newDomainScheduleWithDuration(req *models.CreateScheduleRequest) (*entity.ScheduleWithDuration, error) {
-	period, err := value.ParseSchedulePeriod(req.Period)
+	period, err := value2.ParseSchedulePeriod(req.Period)
 	if err != nil {
 		return nil, err
 
 	}
 
 	return &entity.ScheduleWithDuration{
-		UserId:   value.UserId(req.UserId),
-		Name:     value.ScheduleName(req.Name),
-		Duration: value.ScheduleDuration(req.Duration),
+		UserId:   value2.UserId(req.UserId),
+		Name:     value2.ScheduleName(req.Name),
+		Duration: value2.ScheduleDuration(req.Duration),
 		Period:   period,
 	}, nil
 }
 
-func newRESTCreateScheduleResponse(id value.ScheduleId) models.CreateScheduleResponse {
+func newRESTCreateScheduleResponse(id value2.ScheduleId) models.CreateScheduleResponse {
 	return models.CreateScheduleResponse{
 		Id: int(id),
 	}

@@ -6,7 +6,7 @@ import (
 	"log"
 	"log/slog"
 	"os"
-	"schedule/config"
+	"schedule/internal/config"
 	"strings"
 )
 

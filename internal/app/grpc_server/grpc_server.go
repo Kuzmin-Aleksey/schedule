@@ -11,8 +11,8 @@ import (
 	"google.golang.org/grpc/status"
 	"log/slog"
 	"schedule/internal/app/logger"
+	"schedule/internal/domain/usecase/schedule"
 	"schedule/internal/server/grpcServer"
-	"schedule/internal/usecase/schedule"
 	"schedule/internal/util"
 )
 

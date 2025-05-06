@@ -9,12 +9,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"schedule/config"
 	"schedule/internal/app/grpc_server"
 	"schedule/internal/app/logger"
+	"schedule/internal/config"
+	"schedule/internal/domain/usecase/schedule"
 	"schedule/internal/infrastructure/persistence/mysql"
 	"schedule/internal/server/rest"
-	"schedule/internal/usecase/schedule"
 	"syscall"
 )
 
