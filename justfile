@@ -1,9 +1,5 @@
 set shell := ["powershell.exe", "-c"]
 
-# generate swagger
-gen-swagger:
-     swag init -g cmd/schedule/main.go
-
 # generate api models using swagger
 gen-api-model:
      oapi-codegen --package models --generate models --o internal/controller/httpHandler/models/models.go api/openapi.json
@@ -13,6 +9,9 @@ gen-proto:
 
 lint:
     golangci-lint run -D errcheck
+
+unit-test:
+    go test -v ./...
 
 install_deps:
     go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6
