@@ -2,7 +2,7 @@ set shell := ["powershell.exe", "-c"]
 
 # generate api models using swagger
 gen-api-model:
-     oapi-codegen --package models --generate models --o internal/controller/httpHandler/models/models.go api/openapi.json
+     oapi-codegen --package models --generate models --o internal/server/rest/models/models.go api/openapi.json
 
 gen-proto:
     protoc -I proto proto/schedule.proto --go_out=./internal/server/grpcServer/gen --go_opt=paths=source_relative --go-grpc_out=./internal/server/grpcServer/gen --go-grpc_opt=paths=source_relative

@@ -8,7 +8,7 @@ import (
 	"log/slog"
 	"schedule/internal/server/grpcServer/gen"
 	"schedule/internal/usecase/schedule"
-	"time"
+	"schedule/internal/value"
 )
 
 type scheduleAPI struct {
@@ -37,20 +37,13 @@ func (s *scheduleAPI) CreateSchedule(ctx context.Context, req *schedulev1.Create
 		return nil, status.Error(codes.InvalidArgument, "period is required")
 	}
 
-	resp, err := s.schedule.Create(ctx, &schedule.CreateScheduleDTO{
-		UserId:   req.GetUserId(),
-		Name:     req.GetName(),
-		Duration: uint(req.GetDuration()),
-		Period:   time.Duration(req.GetPeriod()),
-	})
+	resp, err := s.schedule.Create(ctx, newDomainScheduleWithDuration(req))
 	if err != nil {
 		s.l.LogAttrs(ctx, slog.LevelError, "handling request error", slog.String("err", err.Error()))
 		return nil, status.Error(codes.Internal, errInternal)
 	}
 
-	return &schedulev1.CreateScheduleReply{
-		Id: int32(resp.Id),
-	}, nil
+	return newGRPCCreateScheduleReply(resp), nil
 }
 
 func (s *scheduleAPI) GetTimetable(ctx context.Context, req *schedulev1.GetTimetableRequest) (*schedulev1.GetTimetableReply, error) {
@@ -61,27 +54,13 @@ func (s *scheduleAPI) GetTimetable(ctx context.Context, req *schedulev1.GetTimet
 		return nil, status.Error(codes.InvalidArgument, "schedule id is required")
 	}
 
-	resp, err := s.schedule.GetTimetable(ctx, req.GetUserId(), int(req.GetScheduleId()))
+	resp, err := s.schedule.GetTimetable(ctx, value.UserId(req.GetUserId()), value.ScheduleId(req.GetScheduleId()))
 	if err != nil {
 		s.l.LogAttrs(ctx, slog.LevelError, "handling request error", slog.String("err", err.Error()))
 		return nil, status.Error(codes.Internal, errInternal)
 	}
 
-	grpcTimetable := make([]int64, len(resp.Timetable))
-	for i, t := range resp.Timetable {
-		grpcTimetable[i] = t.Unix()
-	}
-
-	grpcResp := &schedulev1.GetTimetableReply{
-		Name:      resp.Name,
-		Period:    int64(resp.Period),
-		Timetable: grpcTimetable,
-	}
-	if resp.EndAt != nil {
-		grpcResp.EndAt = resp.EndAt.Unix()
-	}
-
-	return grpcResp, nil
+	return newGRPCGetTimetableReply(resp), nil
 }
 
 func (s *scheduleAPI) GetByUser(ctx context.Context, req *schedulev1.GetByUserRequest) (*schedulev1.GetByUserReply, error) {
@@ -89,20 +68,13 @@ func (s *scheduleAPI) GetByUser(ctx context.Context, req *schedulev1.GetByUserRe
 		return nil, status.Error(codes.InvalidArgument, "user id is required")
 	}
 
-	ids, err := s.schedule.GetByUser(ctx, req.GetUserId())
+	ids, err := s.schedule.GetByUser(ctx, value.UserId(req.GetUserId()))
 	if err != nil {
 		s.l.LogAttrs(ctx, slog.LevelError, "handling request error", slog.String("err", err.Error()))
 		return nil, status.Error(codes.Internal, errInternal)
 	}
 
-	grpcIds := make([]int32, len(ids))
-	for i, id := range ids {
-		grpcIds[i] = int32(id)
-	}
-
-	return &schedulev1.GetByUserReply{
-		ScheduleIds: grpcIds,
-	}, nil
+	return newGRPCGetByUserReply(ids), nil
 }
 
 func (s *scheduleAPI) GetNextTakings(ctx context.Context, req *schedulev1.GetNextTakingsRequest) (*schedulev1.GetNextTakingsReply, error) {
@@ -110,26 +82,11 @@ func (s *scheduleAPI) GetNextTakings(ctx context.Context, req *schedulev1.GetNex
 		return nil, status.Error(codes.InvalidArgument, "user id is required")
 	}
 
-	resp, err := s.schedule.GetNextTakings(ctx, req.GetUserId())
+	nextTakings, err := s.schedule.GetNextTakings(ctx, value.UserId(req.GetUserId()))
 	if err != nil {
 		s.l.ErrorContext(ctx, "GetNextTakings failed", "err", err)
 		return nil, status.Error(codes.Internal, errInternal)
 	}
 
-	grpcRespItems := make([]*schedulev1.GetNextTakingsReplyItem, len(resp))
-	for i, item := range resp {
-		grpcRespItems[i] = &schedulev1.GetNextTakingsReplyItem{
-			Id:         int32(item.Id),
-			Name:       item.Name,
-			Period:     int64(item.Period),
-			NextTaking: item.NextTaking.Unix(),
-		}
-		if item.EndAt != nil {
-			grpcRespItems[i].EndAt = item.EndAt.Unix()
-		}
-	}
-
-	return &schedulev1.GetNextTakingsReply{
-		Items: grpcRespItems,
-	}, nil
+	return newGRPCGetNextTakingsReply(nextTakings), nil
 }

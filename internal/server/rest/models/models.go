@@ -24,16 +24,16 @@ type ErrorResponse struct {
 
 // NextTakingResponse defines model for next_taking_response.
 type NextTakingResponse struct {
-	EndAt      string `json:"end_at"`
-	Id         int    `json:"id"`
-	Name       string `json:"name"`
-	NextTaking string `json:"next_taking"`
-	Period     string `json:"period"`
+	EndAt      *string `json:"end_at,omitempty"`
+	Id         int     `json:"id"`
+	Name       string  `json:"name"`
+	NextTaking string  `json:"next_taking"`
+	Period     string  `json:"period"`
 }
 
 // ScheduleResponse defines model for schedule_response.
 type ScheduleResponse struct {
-	EndAt     string   `json:"end_at"`
+	EndAt     *string  `json:"end_at,omitempty"`
 	Id        int      `json:"id"`
 	Name      string   `json:"name"`
 	Period    string   `json:"period"`

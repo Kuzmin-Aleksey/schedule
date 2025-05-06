@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/jmoiron/sqlx"
 	"schedule/internal/entity"
+	"schedule/internal/value"
 )
 
 type ScheduleRepo struct {
@@ -44,12 +45,12 @@ func (r *ScheduleRepo) Save(ctx context.Context, schedule *entity.Schedule) erro
 	if err != nil {
 		return err
 	}
-	schedule.Id = int(id)
+	schedule.Id = value.ScheduleId(id)
 
 	return nil
 }
 
-func (r *ScheduleRepo) GetByUser(ctx context.Context, userId int64) ([]entity.Schedule, error) {
+func (r *ScheduleRepo) GetByUser(ctx context.Context, userId value.UserId) ([]entity.Schedule, error) {
 	var schedules []entity.Schedule
 	if err := r.db.SelectContext(ctx, &schedules, "SELECT * FROM schedule WHERE user_id = ?", userId); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -60,7 +61,7 @@ func (r *ScheduleRepo) GetByUser(ctx context.Context, userId int64) ([]entity.Sc
 	return schedules, nil
 }
 
-func (r *ScheduleRepo) GetById(ctx context.Context, userId int64, scheduleId int) (*entity.Schedule, error) {
+func (r *ScheduleRepo) GetById(ctx context.Context, userId value.UserId, scheduleId value.ScheduleId) (*entity.Schedule, error) {
 	schedule := new(entity.Schedule)
 	if err := r.db.GetContext(ctx, schedule, "SELECT * FROM schedule WHERE user_id = ? AND id = ?", userId, scheduleId); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

@@ -7,6 +7,7 @@ import (
 	"schedule/config"
 	"schedule/internal/entity"
 	"schedule/internal/util"
+	"schedule/internal/value"
 	"time"
 )
 
@@ -29,8 +30,8 @@ func getLocationCtx(ctx context.Context) *time.Location {
 //go:generate go run github.com/vektra/mockery/v2@v2.53.0 --name=Repo
 type Repo interface {
 	Save(ctx context.Context, schedule *entity.Schedule) error
-	GetByUser(ctx context.Context, userId int64) ([]entity.Schedule, error)
-	GetById(ctx context.Context, userId int64, scheduleId int) (*entity.Schedule, error)
+	GetByUser(ctx context.Context, userId value.UserId) ([]entity.Schedule, error)
+	GetById(ctx context.Context, userId value.UserId, scheduleId value.ScheduleId) (*entity.Schedule, error)
 }
 
 type Usecase struct {
@@ -48,7 +49,7 @@ func NewUsecase(repo Repo, l *slog.Logger, cfg config.ScheduleConfig) *Usecase {
 	}
 }
 
-func (uc *Usecase) Create(ctx context.Context, dto *CreateScheduleDTO) (*CreateScheduleResponseDTO, error) {
+func (uc *Usecase) Create(ctx context.Context, dto *entity.ScheduleWithDuration) (value.ScheduleId, error) {
 	var expiredAt *time.Time
 	if dto.Duration > 0 {
 		expiredAt = util.Ptr(time.Now().Add(time.Duration(dto.Duration) * day))
@@ -57,23 +58,21 @@ func (uc *Usecase) Create(ctx context.Context, dto *CreateScheduleDTO) (*CreateS
 	schedule := &entity.Schedule{
 		UserId: dto.UserId,
 		Name:   dto.Name,
-		EndAt:  expiredAt,
+		EndAt:  value.NewScheduleEndAt(expiredAt),
 		Period: dto.Period,
 	}
 
 	if err := uc.repo.Save(ctx, schedule); err != nil {
 		uc.l.ErrorContext(ctx, "create schedule error", "err", err)
-		return nil, err
+		return 0, err
 	}
 
 	uc.l.DebugContext(ctx, "create schedule", "schedule", schedule)
 
-	return &CreateScheduleResponseDTO{
-		Id: schedule.Id,
-	}, nil
+	return schedule.Id, nil
 }
 
-func (uc *Usecase) GetByUser(ctx context.Context, userId int64) ([]int, error) {
+func (uc *Usecase) GetByUser(ctx context.Context, userId value.UserId) ([]value.ScheduleId, error) {
 	const op = "schedule.GetByUser"
 
 	location := getLocationCtx(ctx)
@@ -87,10 +86,10 @@ func (uc *Usecase) GetByUser(ctx context.Context, userId int64) ([]int, error) {
 	now := time.Now().In(location)
 	uc.l.DebugContext(ctx, op, "user time", now)
 
-	var ids []int
+	var ids []value.ScheduleId
 	for _, schedule := range schedules {
 		uc.setScheduleEndHour(location, &schedule)
-		if schedule.EndAt == nil || schedule.EndAt.After(now) {
+		if schedule.EndAt.IsNil() || schedule.EndAt.After(now) {
 			uc.l.DebugContext(ctx, "add schedule", "schedule", schedule)
 			ids = append(ids, schedule.Id)
 		} else {
@@ -103,7 +102,7 @@ func (uc *Usecase) GetByUser(ctx context.Context, userId int64) ([]int, error) {
 	return ids, nil
 }
 
-func (uc *Usecase) GetTimetable(ctx context.Context, userId int64, scheduleId int) (*ScheduleResponseDTO, error) {
+func (uc *Usecase) GetTimetable(ctx context.Context, userId value.UserId, scheduleId value.ScheduleId) (*entity.ScheduleTimetable, error) {
 	const op = "schedule.GetTimetable"
 
 	schedule, err := uc.repo.GetById(ctx, userId, scheduleId)
@@ -116,12 +115,12 @@ func (uc *Usecase) GetTimetable(ctx context.Context, userId int64, scheduleId in
 
 	uc.setScheduleEndHour(location, schedule)
 
-	dto := &ScheduleResponseDTO{
+	dto := &entity.ScheduleTimetable{
 		Id:        schedule.Id,
 		Name:      schedule.Name,
 		Period:    schedule.Period,
 		EndAt:     schedule.EndAt,
-		Timetable: []time.Time{},
+		Timetable: []value.ScheduleTimeTableItem{},
 	}
 
 	now := time.Now().In(location)
@@ -132,7 +131,7 @@ func (uc *Usecase) GetTimetable(ctx context.Context, userId int64, scheduleId in
 		now = now.Add(day)
 	}
 
-	if schedule.EndAt != nil && schedule.EndAt.Before(now) {
+	if !schedule.EndAt.IsNil() && schedule.EndAt.Before(now) {
 		uc.l.DebugContext(ctx, "schedule are expired", "schedule", schedule)
 		return dto, nil
 	}
@@ -141,14 +140,14 @@ func (uc *Usecase) GetTimetable(ctx context.Context, userId int64, scheduleId in
 	endOfCurrentDay := time.Date(now.Year(), now.Month(), now.Day(), uc.cfg.EndDayHour, 0, 0, 0, location)
 
 	for i := 0; ; i++ {
-		timestamp := beginOfCurrentDay.Add(time.Duration(i) * schedule.Period)
+		timestamp := beginOfCurrentDay.Add(time.Duration(i) * time.Duration(schedule.Period))
 		timestamp = timestamp.Round(uc.cfg.TimeRound)
 
 		if endOfCurrentDay.Before(timestamp) {
 			break
 		}
 
-		dto.Timetable = append(dto.Timetable, timestamp)
+		dto.Timetable = append(dto.Timetable, value.NewScheduleTimeTableItem(timestamp))
 	}
 
 	uc.l.DebugContext(ctx, op, "timetable", dto)
@@ -156,7 +155,7 @@ func (uc *Usecase) GetTimetable(ctx context.Context, userId int64, scheduleId in
 	return dto, nil
 }
 
-func (uc *Usecase) GetNextTakings(ctx context.Context, userId int64) ([]NextTakingResponseDTO, error) {
+func (uc *Usecase) GetNextTakings(ctx context.Context, userId value.UserId) ([]entity.ScheduleNextTaking, error) {
 	const op = "schedule.GetNextTakings"
 
 	schedules, err := uc.repo.GetByUser(ctx, userId)
@@ -171,7 +170,7 @@ func (uc *Usecase) GetNextTakings(ctx context.Context, userId int64) ([]NextTaki
 
 	nextTakingPeriod := now.Add(uc.cfg.NextTakingPeriod)
 
-	dto := make([]NextTakingResponseDTO, 0) // if result is nil then write [] in json
+	nextTakings := make([]entity.ScheduleNextTaking, 0) // if result is nil then write [] in json
 
 	beginOfCurrentDay := time.Date(now.Year(), now.Month(), now.Day(), uc.cfg.BeginDayHour, 0, 0, 0, location)
 
@@ -180,11 +179,11 @@ func (uc *Usecase) GetNextTakings(ctx context.Context, userId int64) ([]NextTaki
 		uc.l.DebugContext(ctx, "finding taking", "schedule", schedule)
 
 		for i := 0; ; i++ {
-			timestamp := beginOfCurrentDay.Add(time.Duration(i) * schedule.Period)
+			timestamp := beginOfCurrentDay.Add(time.Duration(i) * time.Duration(schedule.Period))
 			timestamp = timestamp.Round(uc.cfg.TimeRound)
 			uc.l.DebugContext(ctx, "checking timestamp", "timestamp", timestamp)
 
-			if schedule.EndAt != nil && timestamp.After(*schedule.EndAt) { // if schedule end
+			if !schedule.EndAt.IsNil() && timestamp.After(schedule.EndAt.ToTime()) { // if schedule end
 				uc.l.DebugContext(ctx, "schedule expired", "schedule", schedule, "timestamp", timestamp)
 				break
 			}
@@ -200,30 +199,30 @@ func (uc *Usecase) GetNextTakings(ctx context.Context, userId int64) ([]NextTaki
 			}
 
 			if timestamp.After(now) {
-				nextTaking := NextTakingResponseDTO{
+				nextTaking := entity.ScheduleNextTaking{
 					Id:         schedule.Id,
 					Name:       schedule.Name,
 					EndAt:      schedule.EndAt,
 					Period:     schedule.Period,
-					NextTaking: timestamp,
+					NextTaking: value.NewScheduleNextTaking(timestamp),
 				}
 
 				uc.l.DebugContext(ctx, "find next taking", "nextTaking", nextTaking)
 
-				dto = util.InsertFunc(dto, nextTaking, func(v NextTakingResponseDTO) bool { // make sorted result
-					return nextTaking.NextTaking.Before(v.NextTaking)
+				nextTakings = util.InsertFunc(nextTakings, nextTaking, func(v entity.ScheduleNextTaking) bool { // make sorted result
+					return nextTaking.NextTaking.Before(v.NextTaking.Time)
 				})
 			}
 		}
 	}
 
-	uc.l.DebugContext(ctx, op, "NextTakings", dto)
+	uc.l.DebugContext(ctx, op, "NextTakings", nextTakings)
 
-	return dto, nil
+	return nextTakings, nil
 }
 
 func (uc *Usecase) setScheduleEndHour(loc *time.Location, s *entity.Schedule) { // in db this is DATE type without time
-	if s.EndAt != nil {
-		*s.EndAt = time.Date(s.EndAt.Year(), s.EndAt.Month(), s.EndAt.Day(), uc.cfg.EndDayHour, 0, 0, 0, loc)
+	if !s.EndAt.IsNil() {
+		s.EndAt = value.NewScheduleEndAt(util.Ptr(time.Date(s.EndAt.Year(), s.EndAt.Month(), s.EndAt.Day(), uc.cfg.EndDayHour, 0, 0, 0, loc)))
 	}
 }

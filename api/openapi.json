@@ -333,7 +333,6 @@
                     }
                 },
                 "required": [
-                    "end_at",
                     "id",
                     "name",
                     "next_taking",
@@ -368,7 +367,6 @@
                     }
                 },
                 "required": [
-                    "end_at",
                     "id",
                     "name",
                     "period",
