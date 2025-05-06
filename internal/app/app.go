@@ -12,7 +12,7 @@ import (
 	"schedule/config"
 	"schedule/internal/app/grpc_server"
 	"schedule/internal/app/logger"
-	mysqlRepo "schedule/internal/repository/mysql"
+	"schedule/internal/infrastructure/persistence/mysql"
 	"schedule/internal/server/rest"
 	"schedule/internal/usecase/schedule"
 	"syscall"
@@ -27,13 +27,13 @@ func Run(cfg *config.Config) {
 	shutdown := make(chan os.Signal, 2)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
-	db, err := mysqlRepo.Connect(cfg.Db)
+	db, err := mysql.Connect(cfg.Db)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	scheduleRepo := mysqlRepo.NewScheduleRepo(db)
+	scheduleRepo := mysql.NewScheduleRepo(db)
 	if err := scheduleRepo.Migrate(); err != nil {
 		log.Fatal("migrate failed: ", err)
 	}
