@@ -6,7 +6,14 @@ gen-swagger:
 
 # generate api models using swagger
 gen-api-model:
-    swagger generate model -f docs/swagger.json -t internal/controller/httpHandler
+     oapi-codegen --package models --generate models --o internal/controller/httpHandler/models/models.go docs/openapi.json
 
 gen-proto:
     protoc -I proto proto/schedule.proto --go_out=./gen-proto --go_opt=paths=source_relative --go-grpc_out=./gen-proto --go-grpc_opt=paths=source_relative
+
+lint:
+    golangci-lint run -D errcheck
+
+install_deps:
+    go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6
+    go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest

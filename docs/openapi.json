@@ -1,0 +1,381 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "Schedule API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "servers": [
+        {
+            "url": "/"
+        }
+    ],
+    "paths": {
+        "/next_taking": {
+            "get": {
+                "tags": [
+                    "schedule"
+                ],
+                "summary": "Get next takings",
+                "description": "Возвращает данные о расписаниях на ближайший период",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "description": "user id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "TZ",
+                        "in": "header",
+                        "description": "timezone",
+                        "schema": {
+                            "type": "string",
+                            "default": "+00:00"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/next_taking_response"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error_response"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error_response"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/schedule": {
+            "get": {
+                "tags": [
+                    "schedule"
+                ],
+                "summary": "Get schedule",
+                "description": "Возвращает данные о выбранном расписании с рассчитанным графиком приёмов на день",
+                "parameters": [
+                    {
+                        "name": "TZ",
+                        "in": "header",
+                        "description": "timezone",
+                        "schema": {
+                            "type": "string",
+                            "default": "+00:00"
+                        }
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "description": "user id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "schedule_id",
+                        "in": "query",
+                        "description": "schedule id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/schedule_response"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error_response"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error_response"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "schedule"
+                ],
+                "summary": "Create schedule",
+                "description": "Создаёт новое расписание",
+                "requestBody": {
+                    "description": "schedule info",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/create_schedule_request"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/create_schedule_response"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error_response"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error_response"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-codegen-request-body-name": "input"
+            }
+        },
+        "/schedules": {
+            "get": {
+                "tags": [
+                    "schedule"
+                ],
+                "summary": "Get user schedules",
+                "description": "Возвращает список идентификаторов существующих расписаний для указанного пользователя",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "description": "user id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "TZ",
+                        "in": "header",
+                        "description": "timezone",
+                        "schema": {
+                            "type": "string",
+                            "default": "+00:00"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error_response"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error_response"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "error_response": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            },
+            "create_schedule_request": {
+                "type": "object",
+                "properties": {
+                    "duration": {
+                        "type": "integer",
+                        "description": "days"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "period": {
+                        "type": "string",
+                        "example": "1h30m"
+                    },
+                    "user_id": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "duration",
+                    "name",
+                    "period",
+                    "user_id"
+                ]
+            },
+            "create_schedule_response": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "id"
+                ]
+            },
+            "next_taking_response": {
+                "type": "object",
+                "properties": {
+                    "end_at": {
+                        "type": "string",
+                        "example": "2025-04-21T22:00:00Z"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "next_taking": {
+                        "type": "string",
+                        "example": "2025-04-21T08:00:00Z"
+                    },
+                    "period": {
+                        "type": "string",
+                        "example": "1h30m"
+                    }
+                },
+                "required": [
+                    "end_at",
+                    "id",
+                    "name",
+                    "next_taking",
+                    "period"
+                 ]
+            },
+            "schedule_response": {
+                "type": "object",
+                "properties": {
+                    "end_at": {
+                        "type": "string",
+                        "example": "2025-04-21T22:00:00Z"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "period": {
+                        "type": "string",
+                        "example": "1h30m"
+                    },
+                    "timetable": {
+                        "type": "array",
+                        "example": [
+                            "2025-04-21T08:00:00Z"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "end_at",
+                    "id",
+                    "name",
+                    "period",
+                    "timetable"
+                ]
+            }
+        }
+    },
+    "x-original-swagger-version": "2.0"
+}

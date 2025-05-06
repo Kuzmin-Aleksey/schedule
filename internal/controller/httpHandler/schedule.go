@@ -35,7 +35,7 @@ func (h *Handler) createSchedule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	reqDto := &schedule.CreateScheduleDTO{
-		UserId:   req.UserID,
+		UserId:   int64(req.UserId),
 		Name:     req.Name,
 		Duration: uint(req.Duration),
 		Period:   duration,
@@ -53,7 +53,7 @@ func (h *Handler) createSchedule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := &models.CreateScheduleResponse{
-		ID: int64(respDto.Id),
+		Id: respDto.Id,
 	}
 
 	h.writeJson(ctx, w, resp, http.StatusOK)
@@ -131,7 +131,7 @@ func (h *Handler) getSchedule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := &models.ScheduleResponse{
-		ID:        int64(respDto.Id),
+		Id:        respDto.Id,
 		EndAt:     endAt,
 		Name:      respDto.Name,
 		Period:    respDto.Period.String(),
@@ -176,7 +176,7 @@ func (h *Handler) scheduleGetNextTakings(w http.ResponseWriter, r *http.Request)
 		}
 
 		resp[i] = &models.NextTakingResponse{
-			ID:         int64(t.Id),
+			Id:         t.Id,
 			EndAt:      endAt,
 			Name:       t.Name,
 			NextTaking: t.NextTaking.String(),

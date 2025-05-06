@@ -2,11 +2,9 @@ package httpHandler
 
 import (
 	"github.com/gorilla/mux"
-	httpSwagger "github.com/swaggo/http-swagger"
 	"log/slog"
 	"net/http"
 	"schedule/config"
-	_ "schedule/docs"
 	"schedule/internal/usecase/schedule"
 )
 
@@ -54,14 +52,6 @@ func (h *Handler) SetScheduleRoutes(schedule *schedule.Usecase) {
 	h.rtr.HandleFunc("/schedule", h.mwWithLocation(h.getSchedule)).Methods(http.MethodGet)
 	h.rtr.HandleFunc("/schedules", h.mwWithLocation(h.getUserSchedules)).Methods(http.MethodGet)
 	h.rtr.HandleFunc("/next_taking", h.mwWithLocation(h.scheduleGetNextTakings)).Methods(http.MethodGet)
-}
-
-func (h *Handler) InitSwaggerHandler() {
-	h.rtr.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
-		httpSwagger.DeepLinking(true),
-		httpSwagger.DocExpansion("none"),
-		httpSwagger.DomID("swagger-ui"),
-	)).Methods(http.MethodGet)
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
