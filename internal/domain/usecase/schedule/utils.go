@@ -70,7 +70,6 @@ func (uc *Usecase) findNextTakings(ctx context.Context, schedules []entity.Sched
 
 				if timestamp.After(nextTakingPeriod) {
 					uc.l.DebugContext(ctx, "schedule out of period", "schedule", schedule, "timestamp", timestamp)
-					beginOfCurrentDay = beginOfCurrentDay.Add(day)
 					break DaysLoop
 				}
 
