@@ -11,7 +11,6 @@ import (
 func newHttpServer(l *slog.Logger, schedule *schedule.Usecase, cfg config.HttpServerConfig) *http.Server {
 	handler := httpHandler.NewHandler(l, &cfg.Log)
 	handler.SetScheduleRoutes(schedule)
-	handler.InitSwaggerHandler()
 
 	return &http.Server{
 		Handler:      handler,
