@@ -315,6 +315,8 @@ func TestGetNextTaking(t *testing.T) {
 			Period:     testSchedules[3].Period,
 			NextTaking: value.NewScheduleNextTaking(date(testCases[5].Location).Add(time.Hour*21 + time.Minute*30 - day)),
 		},
+
+		// next day
 		{
 			Id:         testSchedules[0].Id,
 			Name:       testSchedules[0].Name,
@@ -334,13 +336,27 @@ func TestGetNextTaking(t *testing.T) {
 			Name:       testSchedules[3].Name,
 			EndAt:      testSchedules[3].EndAt,
 			Period:     testSchedules[3].Period,
-			NextTaking: value.NewScheduleNextTaking(date(testCases[5].Location).Add(time.Hour*8 + time.Minute*45)),
+			NextTaking: value.NewScheduleNextTaking(date(testCases[5].Location).Add(time.Hour*8 + time.Minute*0)),
+		},
+		{
+			Id:         testSchedules[4].Id,
+			Name:       testSchedules[4].Name,
+			EndAt:      testSchedules[4].EndAt,
+			Period:     testSchedules[4].Period,
+			NextTaking: value.NewScheduleNextTaking(date(testCases[5].Location).Add(time.Hour*8 + time.Minute*0)),
 		},
 		{
 			Id:         testSchedules[0].Id,
 			Name:       testSchedules[0].Name,
 			EndAt:      testSchedules[0].EndAt,
 			Period:     testSchedules[0].Period,
+			NextTaking: value.NewScheduleNextTaking(date(testCases[5].Location).Add(time.Hour*9 + time.Minute*0)),
+		},
+		{
+			Id:         testSchedules[3].Id,
+			Name:       testSchedules[3].Name,
+			EndAt:      testSchedules[3].EndAt,
+			Period:     testSchedules[3].Period,
 			NextTaking: value.NewScheduleNextTaking(date(testCases[5].Location).Add(time.Hour*9 + time.Minute*0)),
 		},
 	}

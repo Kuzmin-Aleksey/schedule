@@ -49,48 +49,54 @@ func (uc *Usecase) findNextTakings(ctx context.Context, schedules []entity.Sched
 
 	nextTakings := make([]entity.ScheduleNextTaking, 0) // if result is nil then write [] in json
 
-	beginOfCurrentDay := time.Date(now.Year(), now.Month(), now.Day(), uc.cfg.BeginDayHour, 0, 0, 0, location)
-
 	for _, schedule := range schedules {
 		uc.setScheduleEndHour(location, &schedule)
 		uc.l.DebugContext(ctx, "finding taking", "schedule", schedule)
 
-		for i := 0; ; i++ {
-			timestamp := beginOfCurrentDay.Add(time.Duration(i) * time.Duration(schedule.Period))
-			timestamp = timestamp.Round(uc.cfg.TimeRound)
-			uc.l.DebugContext(ctx, "checking timestamp", "timestamp", timestamp)
+	DaysLoop:
+		for days := 0; ; days++ {
+			beginOfCurrentDay := time.Date(now.Year(), now.Month(), now.Day()+days, uc.cfg.BeginDayHour, 0, 0, 0, location)
+			uc.l.DebugContext(ctx, "finding for day", "day", beginOfCurrentDay)
 
-			if !schedule.EndAt.IsNil() && timestamp.After(schedule.EndAt.ToTime()) { // if schedule end
-				uc.l.DebugContext(ctx, "schedule expired", "schedule", schedule, "timestamp", timestamp)
-				break
-			}
+			for i := 0; ; i++ {
+				timestamp := beginOfCurrentDay.Add(time.Duration(i) * time.Duration(schedule.Period))
+				timestamp = timestamp.Round(uc.cfg.TimeRound)
+				uc.l.DebugContext(ctx, "checking timestamp", "timestamp", timestamp)
 
-			if timestamp.After(nextTakingPeriod) {
-				uc.l.DebugContext(ctx, "schedule out of period", "schedule", schedule, "timestamp", timestamp)
-				break
-			}
-
-			if timestamp.Hour() < uc.cfg.BeginDayHour || timestamp.Hour() >= uc.cfg.EndDayHour {
-				uc.l.DebugContext(ctx, "now night", "schedule", schedule, "timestamp", timestamp)
-				continue
-			}
-
-			if timestamp.After(now) {
-				nextTaking := entity.ScheduleNextTaking{
-					Id:         schedule.Id,
-					Name:       schedule.Name,
-					EndAt:      schedule.EndAt,
-					Period:     schedule.Period,
-					NextTaking: value.NewScheduleNextTaking(timestamp),
+				if !schedule.EndAt.IsNil() && timestamp.After(schedule.EndAt.ToTime()) { // if schedule end
+					uc.l.DebugContext(ctx, "schedule expired", "schedule", schedule, "timestamp", timestamp)
+					break DaysLoop
 				}
 
-				uc.l.DebugContext(ctx, "find next taking", "nextTaking", nextTaking)
+				if timestamp.After(nextTakingPeriod) {
+					uc.l.DebugContext(ctx, "schedule out of period", "schedule", schedule, "timestamp", timestamp)
+					beginOfCurrentDay = beginOfCurrentDay.Add(day)
+					break DaysLoop
+				}
 
-				nextTakings = util.InsertFunc(nextTakings, nextTaking, func(v entity.ScheduleNextTaking) bool { // make sorted result
-					return nextTaking.NextTaking.Before(v.NextTaking.Time)
-				})
+				if timestamp.Hour() < uc.cfg.BeginDayHour || timestamp.Hour() >= uc.cfg.EndDayHour {
+					uc.l.DebugContext(ctx, "now night", "schedule", schedule, "timestamp", timestamp)
+					break
+				}
+
+				if timestamp.After(now) {
+					nextTaking := entity.ScheduleNextTaking{
+						Id:         schedule.Id,
+						Name:       schedule.Name,
+						EndAt:      schedule.EndAt,
+						Period:     schedule.Period,
+						NextTaking: value.NewScheduleNextTaking(timestamp),
+					}
+
+					uc.l.DebugContext(ctx, "find next taking", "nextTaking", nextTaking)
+
+					nextTakings = util.InsertFunc(nextTakings, nextTaking, func(v entity.ScheduleNextTaking) bool { // make sorted result
+						return nextTaking.NextTaking.Before(v.NextTaking.Time)
+					})
+				}
 			}
 		}
+
 	}
 
 	return nextTakings
