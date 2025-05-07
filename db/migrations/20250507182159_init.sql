@@ -14,7 +14,6 @@ CREATE TABLE schedule (
 -- +goose Down
 -- +goose StatementBegin
 SELECT 'down SQL query';
+-- +goose StatementEnd
 
 DROP TABLE schedule;
-
--- +goose StatementEnd

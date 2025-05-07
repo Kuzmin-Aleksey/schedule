@@ -1,4 +1,5 @@
-set shell := ["powershell.exe", "-c"]
+set shell := ["pwsh.exe", "-CommandWithArgs"]
+set dotenv-load := true
 
 MIGRATION_DIR := "db/migrations"
 
@@ -18,9 +19,14 @@ unit-test:
 goose-create NAME:
     goose -v -dir {{MIGRATION_DIR}} create {{NAME}} sql
 
-goose-up USER PASSWORD DB:
-    goose -v -dir {{MIGRATION_DIR}} mysql "{{USER}}:{{PASSWORD}}@/{{DB}}?parseTime=true" up
-    goose -v -dir {{MIGRATION_DIR}} mysql "{{USER}}:{{PASSWORD}}@/{{DB}}?parseTime=true" status
+goose-up:
+    goose -v -dir {{MIGRATION_DIR}} mysql "{{env('MYSQL_USER', 'root')}}:{{env('MYSQL_PASSWORD')}}@/{{env('MYSQL_NAME')}}?parseTime=true" up
+    goose -v -dir {{MIGRATION_DIR}} mysql "{{env('MYSQL_USER', 'root')}}:{{env('MYSQL_PASSWORD')}}@/{{env('MYSQL_NAME')}}?parseTime=true" status
+
+goose-down:
+    goose -v -dir {{MIGRATION_DIR}} mysql "{{env('MYSQL_USER', 'root')}}:{{env('MYSQL_PASSWORD')}}@/{{env('MYSQL_NAME')}}?parseTime=true" down
+    goose -v -dir {{MIGRATION_DIR}} mysql "{{env('MYSQL_USER', 'root')}}:{{env('MYSQL_PASSWORD')}}@/{{env('MYSQL_NAME')}}?parseTime=true" status
+
 
 install_deps:
     go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6
