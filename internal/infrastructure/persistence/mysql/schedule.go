@@ -19,22 +19,6 @@ func NewScheduleRepo(db *sqlx.DB) *ScheduleRepo {
 	}
 }
 
-func (r *ScheduleRepo) Migrate() error {
-	query := `
-	CREATE TABLE IF NOT EXISTS schedule (
-		id      int auto_increment primary key,
-		user_id bigint       not null,
-		name    varchar(255) not null,
-		end_at  date         null,
-		period  bigint       not null
-	);
-	`
-	if _, err := r.db.Exec(query); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (r *ScheduleRepo) Save(ctx context.Context, schedule *entity.Schedule) error {
 	res, err := r.db.NamedExecContext(ctx, "INSERT INTO schedule (user_id, name, end_at, period) VALUES (:user_id, :name, :end_at, :period)", schedule)
 	if err != nil {

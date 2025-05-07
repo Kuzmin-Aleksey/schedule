@@ -35,9 +35,6 @@ func Run(cfg *config.Config) {
 	defer db.Close()
 
 	scheduleRepo := mysql.NewScheduleRepo(db)
-	if err := scheduleRepo.Migrate(); err != nil {
-		log.Fatal("migrate failed: ", err)
-	}
 
 	scheduleUsecase := schedule.NewUsecase(scheduleRepo, l, cfg.Schedule)
 
