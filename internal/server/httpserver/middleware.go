@@ -1,13 +1,11 @@
 package httpserver
 
 import (
-	"context"
 	"fmt"
 	"github.com/google/uuid"
 	"net/http"
-	"schedule/internal/app/logger"
-	"schedule/internal/domain/usecase/schedule"
 	"schedule/internal/util"
+	"schedule/pkg/contextx"
 	"time"
 )
 
@@ -27,7 +25,7 @@ func (s *Server) mwWithLocation(next http.HandlerFunc) http.HandlerFunc {
 			loc = time.UTC // default
 		}
 
-		ctx := schedule.CtxWithLocation(r.Context(), loc)
+		ctx := contextx.WithLocation(r.Context(), loc)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
@@ -43,7 +41,7 @@ func (s *Server) mwAddTraceId(next http.Handler) http.Handler {
 			w.Header().Set(headerTraceId, traceId)
 		}
 
-		ctx := context.WithValue(r.Context(), logger.TraceIdKey{}, traceId)
+		ctx := contextx.WithTraceId(r.Context(), contextx.TraceId(traceId))
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

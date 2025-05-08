@@ -10,10 +10,10 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"log/slog"
-	"schedule/internal/app/logger"
 	"schedule/internal/domain/usecase/schedule"
 	"schedule/internal/server/grpcserver"
 	"schedule/internal/util"
+	"schedule/pkg/contextx"
 )
 
 func NewGrpcServer(l *slog.Logger, schedule *schedule.Usecase) *grpc.Server {
@@ -46,7 +46,7 @@ func timezoneUnaryInterceptor(ctx context.Context, req any, _ *grpc.UnaryServerI
 		if len(tz) > 0 {
 			loc, err := util.ParseTimezone(tz[0])
 			if err == nil {
-				ctx = schedule.CtxWithLocation(ctx, loc)
+				ctx = contextx.WithLocation(ctx, loc)
 			}
 		}
 	}
@@ -54,12 +54,14 @@ func timezoneUnaryInterceptor(ctx context.Context, req any, _ *grpc.UnaryServerI
 	return handler(ctx, req)
 }
 
+const TraceIdMdKey = "X-Trace-Id"
+
 func traceIdUnaryInterceptor(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 	var traceId string
 
 	md, ok := metadata.FromIncomingContext(ctx)
 	if ok {
-		traceIdSlice := md.Get("X-Trace-Id")
+		traceIdSlice := md.Get(TraceIdMdKey)
 		if len(traceIdSlice) > 0 {
 			if traceIdSlice[0] != "" {
 				traceId = traceIdSlice[0]
@@ -69,11 +71,11 @@ func traceIdUnaryInterceptor(ctx context.Context, req any, _ *grpc.UnaryServerIn
 
 	if traceId == "" {
 		traceId = uuid.NewString()
-		header := metadata.Pairs("X-Trace-Id", traceId)
+		header := metadata.Pairs(TraceIdMdKey, traceId)
 		grpc.SetHeader(ctx, header)
 	}
 
-	ctx = context.WithValue(ctx, logger.TraceIdKey{}, traceId)
+	ctx = contextx.WithTraceId(ctx, contextx.TraceId(traceId))
 
 	return handler(ctx, req)
 }

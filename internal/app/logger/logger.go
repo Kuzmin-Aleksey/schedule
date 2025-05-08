@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"schedule/internal/config"
+	"schedule/pkg/contextx"
 	"strings"
 )
 
@@ -15,17 +16,15 @@ const (
 	LogFormatText = "text"
 )
 
-type TraceIdKey struct{}
-
 type logHandler struct {
 	slog.Handler
 }
 
 func (h *logHandler) Handle(ctx context.Context, r slog.Record) error {
-	traceId, _ := ctx.Value(TraceIdKey{}).(string)
+	traceId := contextx.GetTraceId(ctx)
 
 	if traceId != "" {
-		r.AddAttrs(slog.String("trace_id", traceId))
+		r.AddAttrs(slog.String("trace_id", string(traceId)))
 	}
 
 	return h.Handler.Handle(ctx, r)

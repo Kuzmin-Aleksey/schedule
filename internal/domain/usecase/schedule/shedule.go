@@ -8,24 +8,11 @@ import (
 	"schedule/internal/domain/entity"
 	"schedule/internal/domain/value"
 	"schedule/internal/util"
+	"schedule/pkg/contextx"
 	"time"
 )
 
 const day = 24 * time.Hour
-
-type userLocationCtxKey struct{}
-
-func CtxWithLocation(ctx context.Context, location *time.Location) context.Context {
-	return context.WithValue(ctx, userLocationCtxKey{}, location)
-}
-
-func getLocationCtx(ctx context.Context) *time.Location {
-	location := time.UTC
-	if loc, ok := ctx.Value(userLocationCtxKey{}).(*time.Location); loc != nil && ok {
-		location = loc
-	}
-	return location
-}
 
 type Repo interface {
 	Save(ctx context.Context, schedule *entity.Schedule) error
@@ -74,7 +61,7 @@ func (uc *Usecase) Create(ctx context.Context, dto *entity.ScheduleWithDuration)
 func (uc *Usecase) GetByUser(ctx context.Context, userId value.UserId) ([]value.ScheduleId, error) {
 	const op = "schedule.GetByUser"
 
-	location := getLocationCtx(ctx)
+	location := contextx.GetLocationOrDefault(ctx)
 
 	schedules, err := uc.repo.GetByUser(ctx, userId)
 	if err != nil {
@@ -102,7 +89,7 @@ func (uc *Usecase) GetTimetable(ctx context.Context, userId value.UserId, schedu
 	}
 	// todo handle not found
 
-	location := getLocationCtx(ctx)
+	location := contextx.GetLocationOrDefault(ctx)
 
 	uc.setScheduleEndHour(location, schedule)
 
@@ -143,7 +130,7 @@ func (uc *Usecase) GetNextTakings(ctx context.Context, userId value.UserId) ([]e
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	location := getLocationCtx(ctx)
+	location := contextx.GetLocationOrDefault(ctx)
 	now := time.Now().In(location)
 	uc.l.DebugContext(ctx, op, "user time", now)
 
