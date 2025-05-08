@@ -12,7 +12,7 @@ import (
 	"log/slog"
 	"schedule/internal/app/logger"
 	"schedule/internal/domain/usecase/schedule"
-	"schedule/internal/server/grpcServer"
+	"schedule/internal/server/grpcserver"
 	"schedule/internal/util"
 )
 
@@ -35,7 +35,7 @@ func NewGrpcServer(l *slog.Logger, schedule *schedule.Usecase) *grpc.Server {
 		recovery.UnaryServerInterceptor(recoveryOpts...),
 		logging.UnaryServerInterceptor(interceptorLog(l), loggingOpts...),
 	))
-	grpcServer.Register(server, schedule, l)
+	grpcserver.Register(server, schedule, l)
 	return server
 }
 

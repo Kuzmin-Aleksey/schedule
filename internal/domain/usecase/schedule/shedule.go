@@ -100,6 +100,7 @@ func (uc *Usecase) GetTimetable(ctx context.Context, userId value.UserId, schedu
 		uc.l.ErrorContext(ctx, "get schedule error", "err", err, "scheduleId", scheduleId)
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
+	// todo handle not found
 
 	location := getLocationCtx(ctx)
 

@@ -1,9 +1,9 @@
-package grpcServer
+package grpcserver
 
 import (
 	"schedule/internal/domain/entity"
 	"schedule/internal/domain/value"
-	schedulev1 "schedule/internal/server/grpcServer/gen"
+	schedulev1 "schedule/pkg/grpc"
 )
 
 func newDomainScheduleWithDuration(req *schedulev1.CreateScheduleRequest) *entity.ScheduleWithDuration {
@@ -21,13 +21,13 @@ func newGRPCCreateScheduleReply(scheduleId value.ScheduleId) *schedulev1.CreateS
 	}
 }
 
-func newGRPCGetTimetableReply(timetable *entity.ScheduleTimetable) *schedulev1.GetTimetableReply {
+func newGRPCGetScheduleReply(timetable *entity.ScheduleTimetable) *schedulev1.GetScheduleReply {
 	grpcTimetable := make([]int64, len(timetable.Timetable))
 	for i, t := range timetable.Timetable {
 		grpcTimetable[i] = t.Unix()
 	}
 
-	grpcResp := &schedulev1.GetTimetableReply{
+	grpcResp := &schedulev1.GetScheduleReply{
 		Name:      timetable.Name.String(),
 		Period:    int64(timetable.Period),
 		Timetable: grpcTimetable,
@@ -39,13 +39,13 @@ func newGRPCGetTimetableReply(timetable *entity.ScheduleTimetable) *schedulev1.G
 	return grpcResp
 }
 
-func newGRPCGetByUserReply(ids []value.ScheduleId) *schedulev1.GetByUserReply {
+func newGRPCGetSchedulesReply(ids []value.ScheduleId) *schedulev1.GetSchedulesReply {
 	grpcIds := make([]int32, len(ids))
 	for i, id := range ids {
 		grpcIds[i] = int32(id)
 	}
 
-	return &schedulev1.GetByUserReply{
+	return &schedulev1.GetSchedulesReply{
 		ScheduleIds: grpcIds,
 	}
 }

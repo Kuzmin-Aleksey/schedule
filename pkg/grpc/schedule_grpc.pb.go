@@ -20,8 +20,8 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	Schedule_CreateSchedule_FullMethodName = "/schedule.Schedule/CreateSchedule"
-	Schedule_GetTimetable_FullMethodName   = "/schedule.Schedule/GetTimetable"
-	Schedule_GetByUser_FullMethodName      = "/schedule.Schedule/GetByUser"
+	Schedule_GetSchedule_FullMethodName    = "/schedule.Schedule/GetSchedule"
+	Schedule_GetSchedules_FullMethodName   = "/schedule.Schedule/GetSchedules"
 	Schedule_GetNextTakings_FullMethodName = "/schedule.Schedule/GetNextTakings"
 )
 
@@ -30,8 +30,8 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ScheduleClient interface {
 	CreateSchedule(ctx context.Context, in *CreateScheduleRequest, opts ...grpc.CallOption) (*CreateScheduleReply, error)
-	GetTimetable(ctx context.Context, in *GetTimetableRequest, opts ...grpc.CallOption) (*GetTimetableReply, error)
-	GetByUser(ctx context.Context, in *GetByUserRequest, opts ...grpc.CallOption) (*GetByUserReply, error)
+	GetSchedule(ctx context.Context, in *GetScheduleRequest, opts ...grpc.CallOption) (*GetScheduleReply, error)
+	GetSchedules(ctx context.Context, in *GetSchedulesRequest, opts ...grpc.CallOption) (*GetSchedulesReply, error)
 	GetNextTakings(ctx context.Context, in *GetNextTakingsRequest, opts ...grpc.CallOption) (*GetNextTakingsReply, error)
 }
 
@@ -53,20 +53,20 @@ func (c *scheduleClient) CreateSchedule(ctx context.Context, in *CreateScheduleR
 	return out, nil
 }
 
-func (c *scheduleClient) GetTimetable(ctx context.Context, in *GetTimetableRequest, opts ...grpc.CallOption) (*GetTimetableReply, error) {
+func (c *scheduleClient) GetSchedule(ctx context.Context, in *GetScheduleRequest, opts ...grpc.CallOption) (*GetScheduleReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetTimetableReply)
-	err := c.cc.Invoke(ctx, Schedule_GetTimetable_FullMethodName, in, out, cOpts...)
+	out := new(GetScheduleReply)
+	err := c.cc.Invoke(ctx, Schedule_GetSchedule_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *scheduleClient) GetByUser(ctx context.Context, in *GetByUserRequest, opts ...grpc.CallOption) (*GetByUserReply, error) {
+func (c *scheduleClient) GetSchedules(ctx context.Context, in *GetSchedulesRequest, opts ...grpc.CallOption) (*GetSchedulesReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetByUserReply)
-	err := c.cc.Invoke(ctx, Schedule_GetByUser_FullMethodName, in, out, cOpts...)
+	out := new(GetSchedulesReply)
+	err := c.cc.Invoke(ctx, Schedule_GetSchedules_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -88,8 +88,8 @@ func (c *scheduleClient) GetNextTakings(ctx context.Context, in *GetNextTakingsR
 // for forward compatibility.
 type ScheduleServer interface {
 	CreateSchedule(context.Context, *CreateScheduleRequest) (*CreateScheduleReply, error)
-	GetTimetable(context.Context, *GetTimetableRequest) (*GetTimetableReply, error)
-	GetByUser(context.Context, *GetByUserRequest) (*GetByUserReply, error)
+	GetSchedule(context.Context, *GetScheduleRequest) (*GetScheduleReply, error)
+	GetSchedules(context.Context, *GetSchedulesRequest) (*GetSchedulesReply, error)
 	GetNextTakings(context.Context, *GetNextTakingsRequest) (*GetNextTakingsReply, error)
 	mustEmbedUnimplementedScheduleServer()
 }
@@ -104,11 +104,11 @@ type UnimplementedScheduleServer struct{}
 func (UnimplementedScheduleServer) CreateSchedule(context.Context, *CreateScheduleRequest) (*CreateScheduleReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateSchedule not implemented")
 }
-func (UnimplementedScheduleServer) GetTimetable(context.Context, *GetTimetableRequest) (*GetTimetableReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetTimetable not implemented")
+func (UnimplementedScheduleServer) GetSchedule(context.Context, *GetScheduleRequest) (*GetScheduleReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSchedule not implemented")
 }
-func (UnimplementedScheduleServer) GetByUser(context.Context, *GetByUserRequest) (*GetByUserReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetByUser not implemented")
+func (UnimplementedScheduleServer) GetSchedules(context.Context, *GetSchedulesRequest) (*GetSchedulesReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSchedules not implemented")
 }
 func (UnimplementedScheduleServer) GetNextTakings(context.Context, *GetNextTakingsRequest) (*GetNextTakingsReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetNextTakings not implemented")
@@ -152,38 +152,38 @@ func _Schedule_CreateSchedule_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Schedule_GetTimetable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetTimetableRequest)
+func _Schedule_GetSchedule_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetScheduleRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ScheduleServer).GetTimetable(ctx, in)
+		return srv.(ScheduleServer).GetSchedule(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Schedule_GetTimetable_FullMethodName,
+		FullMethod: Schedule_GetSchedule_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ScheduleServer).GetTimetable(ctx, req.(*GetTimetableRequest))
+		return srv.(ScheduleServer).GetSchedule(ctx, req.(*GetScheduleRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Schedule_GetByUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetByUserRequest)
+func _Schedule_GetSchedules_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSchedulesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ScheduleServer).GetByUser(ctx, in)
+		return srv.(ScheduleServer).GetSchedules(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Schedule_GetByUser_FullMethodName,
+		FullMethod: Schedule_GetSchedules_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ScheduleServer).GetByUser(ctx, req.(*GetByUserRequest))
+		return srv.(ScheduleServer).GetSchedules(ctx, req.(*GetSchedulesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -218,12 +218,12 @@ var Schedule_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Schedule_CreateSchedule_Handler,
 		},
 		{
-			MethodName: "GetTimetable",
-			Handler:    _Schedule_GetTimetable_Handler,
+			MethodName: "GetSchedule",
+			Handler:    _Schedule_GetSchedule_Handler,
 		},
 		{
-			MethodName: "GetByUser",
-			Handler:    _Schedule_GetByUser_Handler,
+			MethodName: "GetSchedules",
+			Handler:    _Schedule_GetSchedules_Handler,
 		},
 		{
 			MethodName: "GetNextTakings",

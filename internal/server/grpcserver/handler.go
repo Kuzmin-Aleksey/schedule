@@ -1,4 +1,4 @@
-package grpcServer
+package grpcserver
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"log/slog"
 	"schedule/internal/domain/usecase/schedule"
 	"schedule/internal/domain/value"
-	"schedule/internal/server/grpcServer/gen"
+	schedulev1 "schedule/pkg/grpc"
 )
 
 type scheduleAPI struct {
@@ -46,7 +46,7 @@ func (s *scheduleAPI) CreateSchedule(ctx context.Context, req *schedulev1.Create
 	return newGRPCCreateScheduleReply(resp), nil
 }
 
-func (s *scheduleAPI) GetTimetable(ctx context.Context, req *schedulev1.GetTimetableRequest) (*schedulev1.GetTimetableReply, error) {
+func (s *scheduleAPI) GetSchedule(ctx context.Context, req *schedulev1.GetScheduleRequest) (*schedulev1.GetScheduleReply, error) {
 	if req.GetUserId() == 0 {
 		return nil, status.Error(codes.InvalidArgument, "user id is required")
 	}
@@ -60,10 +60,10 @@ func (s *scheduleAPI) GetTimetable(ctx context.Context, req *schedulev1.GetTimet
 		return nil, errInternal
 	}
 
-	return newGRPCGetTimetableReply(resp), nil
+	return newGRPCGetScheduleReply(resp), nil
 }
 
-func (s *scheduleAPI) GetByUser(ctx context.Context, req *schedulev1.GetByUserRequest) (*schedulev1.GetByUserReply, error) {
+func (s *scheduleAPI) GetSchedules(ctx context.Context, req *schedulev1.GetSchedulesRequest) (*schedulev1.GetSchedulesReply, error) {
 	if req.GetUserId() == 0 {
 		return nil, status.Error(codes.InvalidArgument, "user id is required")
 	}
@@ -74,7 +74,7 @@ func (s *scheduleAPI) GetByUser(ctx context.Context, req *schedulev1.GetByUserRe
 		return nil, errInternal
 	}
 
-	return newGRPCGetByUserReply(ids), nil
+	return newGRPCGetSchedulesReply(ids), nil
 }
 
 func (s *scheduleAPI) GetNextTakings(ctx context.Context, req *schedulev1.GetNextTakingsRequest) (*schedulev1.GetNextTakingsReply, error) {

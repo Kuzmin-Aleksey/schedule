@@ -42,6 +42,10 @@ func hideSafeValues(s any) (err error) {
 		}
 	}()
 
+	if s == nil {
+		return nil
+	}
+
 	var ps reflect.Value
 
 	if v, ok := s.(reflect.Value); ok {
@@ -56,6 +60,11 @@ func hideSafeValues(s any) (err error) {
 		}
 		ps = ps.Addr()
 	}
+
+	if ps.IsNil() {
+		return nil
+	}
+
 	ps = ps.Elem()
 
 	t := ps.Type()

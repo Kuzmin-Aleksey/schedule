@@ -6,6 +6,10 @@ type ScheduleTimeTableItem struct {
 	time.Time
 }
 
+func (t ScheduleTimeTableItem) String() string {
+	return t.Format(time.TimeOnly)
+}
+
 func NewScheduleTimeTableItem(t time.Time) ScheduleTimeTableItem {
 	return ScheduleTimeTableItem{
 		Time: t,

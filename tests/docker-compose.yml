@@ -1,0 +1,31 @@
+name: schedule
+
+services:
+  mysql:
+    container_name: mysql
+    image: mysql:8
+    ports:
+      - "127.0.0.1:3306:3306"
+
+    environment:
+      MYSQL_DATABASE: $MYSQL_SCHEMA
+      MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
+
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "127.0.0.1"]
+      interval: 3s
+      timeout: 3s
+      retries: 3
+
+  migrations:
+    container_name: migrations
+    restart: on-failure
+    build:
+      context: ..
+      dockerfile: .docker/Dockerfile-migration
+    environment:
+      GOOSE_DRIVER: "mysql"
+      GOOSE_DBSTRING: "root:$MYSQL_ROOT_PASSWORD@tcp(mysql)/$MYSQL_SCHEMA?parseTime=true"
+    depends_on:
+      mysql:
+        condition: service_healthy

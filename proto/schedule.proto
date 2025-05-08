@@ -6,8 +6,8 @@ option go_package = "schedule.v1;schedulev1";
 
 service Schedule {
   rpc CreateSchedule(CreateScheduleRequest) returns (CreateScheduleReply);
-  rpc GetTimetable(GetTimetableRequest) returns (GetTimetableReply);
-  rpc GetByUser(GetByUserRequest) returns (GetByUserReply);
+  rpc GetSchedule(GetScheduleRequest) returns (GetScheduleReply);
+  rpc GetSchedules(GetSchedulesRequest) returns (GetSchedulesReply);
   rpc GetNextTakings(GetNextTakingsRequest) returns (GetNextTakingsReply);
 }
 
@@ -23,23 +23,23 @@ message CreateScheduleReply {
   int32 id = 1;
 }
 
-message GetTimetableRequest {
+message GetScheduleRequest {
   int64 userId = 1;
   int32 scheduleId = 2;
 }
 
-message GetTimetableReply {
+message GetScheduleReply {
   string         name = 1;
   int64          endAt = 2;
   int64          period = 3;
   repeated int64 timetable = 4;
 }
 
-message GetByUserRequest {
+message GetSchedulesRequest {
   int64 userId = 1;
 }
 
-message GetByUserReply {
+message GetSchedulesReply {
   repeated int32 scheduleIds = 1;
 }
 

@@ -9,11 +9,11 @@ import (
 	"time"
 )
 
-func Connect(cfg config.DbConfig) (*sqlx.DB, error) {
+func Connect(cfg config.MySqlConfig) (*sqlx.DB, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cfg.ConnectTimeout)*time.Second)
 	defer cancel()
 
-	dataSource := fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", cfg.User, cfg.Password, cfg.Addr, cfg.Schema)
+	dataSource := fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true&multiStatements=true", cfg.User, cfg.Password, cfg.Addr, cfg.Schema)
 
 	db, err := sqlx.ConnectContext(ctx, "mysql", dataSource)
 	if err != nil {

@@ -1,11 +1,11 @@
-package rest
+package httpserver
 
 import (
 	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"schedule/internal/server/rest/models"
+	"schedule/pkg/rest"
 )
 
 type Base struct {
@@ -25,7 +25,7 @@ func (b *Base) writeAndLogErr(ctx context.Context, w http.ResponseWriter, err er
 
 	w.WriteHeader(status)
 
-	if err := json.NewEncoder(w).Encode(models.ErrorResponse{Error: err.Error()}); err != nil {
+	if err := json.NewEncoder(w).Encode(rest.ErrorResponse{Error: err.Error()}); err != nil {
 		b.l.LogAttrs(ctx, slog.LevelError, errEncodingJson, slog.String("err", err.Error()))
 	}
 

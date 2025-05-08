@@ -133,7 +133,7 @@ func (x *CreateScheduleReply) GetId() int32 {
 	return 0
 }
 
-type GetTimetableRequest struct {
+type GetScheduleRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        int64                  `protobuf:"varint,1,opt,name=userId,proto3" json:"userId,omitempty"`
 	ScheduleId    int32                  `protobuf:"varint,2,opt,name=scheduleId,proto3" json:"scheduleId,omitempty"`
@@ -141,20 +141,20 @@ type GetTimetableRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetTimetableRequest) Reset() {
-	*x = GetTimetableRequest{}
+func (x *GetScheduleRequest) Reset() {
+	*x = GetScheduleRequest{}
 	mi := &file_schedule_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetTimetableRequest) String() string {
+func (x *GetScheduleRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetTimetableRequest) ProtoMessage() {}
+func (*GetScheduleRequest) ProtoMessage() {}
 
-func (x *GetTimetableRequest) ProtoReflect() protoreflect.Message {
+func (x *GetScheduleRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_schedule_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -166,26 +166,26 @@ func (x *GetTimetableRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetTimetableRequest.ProtoReflect.Descriptor instead.
-func (*GetTimetableRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetScheduleRequest.ProtoReflect.Descriptor instead.
+func (*GetScheduleRequest) Descriptor() ([]byte, []int) {
 	return file_schedule_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *GetTimetableRequest) GetUserId() int64 {
+func (x *GetScheduleRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
 	return 0
 }
 
-func (x *GetTimetableRequest) GetScheduleId() int32 {
+func (x *GetScheduleRequest) GetScheduleId() int32 {
 	if x != nil {
 		return x.ScheduleId
 	}
 	return 0
 }
 
-type GetTimetableReply struct {
+type GetScheduleReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	EndAt         int64                  `protobuf:"varint,2,opt,name=endAt,proto3" json:"endAt,omitempty"`
@@ -195,20 +195,20 @@ type GetTimetableReply struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetTimetableReply) Reset() {
-	*x = GetTimetableReply{}
+func (x *GetScheduleReply) Reset() {
+	*x = GetScheduleReply{}
 	mi := &file_schedule_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetTimetableReply) String() string {
+func (x *GetScheduleReply) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetTimetableReply) ProtoMessage() {}
+func (*GetScheduleReply) ProtoMessage() {}
 
-func (x *GetTimetableReply) ProtoReflect() protoreflect.Message {
+func (x *GetScheduleReply) ProtoReflect() protoreflect.Message {
 	mi := &file_schedule_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -220,60 +220,60 @@ func (x *GetTimetableReply) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetTimetableReply.ProtoReflect.Descriptor instead.
-func (*GetTimetableReply) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetScheduleReply.ProtoReflect.Descriptor instead.
+func (*GetScheduleReply) Descriptor() ([]byte, []int) {
 	return file_schedule_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *GetTimetableReply) GetName() string {
+func (x *GetScheduleReply) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *GetTimetableReply) GetEndAt() int64 {
+func (x *GetScheduleReply) GetEndAt() int64 {
 	if x != nil {
 		return x.EndAt
 	}
 	return 0
 }
 
-func (x *GetTimetableReply) GetPeriod() int64 {
+func (x *GetScheduleReply) GetPeriod() int64 {
 	if x != nil {
 		return x.Period
 	}
 	return 0
 }
 
-func (x *GetTimetableReply) GetTimetable() []int64 {
+func (x *GetScheduleReply) GetTimetable() []int64 {
 	if x != nil {
 		return x.Timetable
 	}
 	return nil
 }
 
-type GetByUserRequest struct {
+type GetSchedulesRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        int64                  `protobuf:"varint,1,opt,name=userId,proto3" json:"userId,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetByUserRequest) Reset() {
-	*x = GetByUserRequest{}
+func (x *GetSchedulesRequest) Reset() {
+	*x = GetSchedulesRequest{}
 	mi := &file_schedule_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetByUserRequest) String() string {
+func (x *GetSchedulesRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetByUserRequest) ProtoMessage() {}
+func (*GetSchedulesRequest) ProtoMessage() {}
 
-func (x *GetByUserRequest) ProtoReflect() protoreflect.Message {
+func (x *GetSchedulesRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_schedule_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -285,39 +285,39 @@ func (x *GetByUserRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetByUserRequest.ProtoReflect.Descriptor instead.
-func (*GetByUserRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetSchedulesRequest.ProtoReflect.Descriptor instead.
+func (*GetSchedulesRequest) Descriptor() ([]byte, []int) {
 	return file_schedule_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *GetByUserRequest) GetUserId() int64 {
+func (x *GetSchedulesRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
 	return 0
 }
 
-type GetByUserReply struct {
+type GetSchedulesReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ScheduleIds   []int32                `protobuf:"varint,1,rep,packed,name=scheduleIds,proto3" json:"scheduleIds,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetByUserReply) Reset() {
-	*x = GetByUserReply{}
+func (x *GetSchedulesReply) Reset() {
+	*x = GetSchedulesReply{}
 	mi := &file_schedule_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetByUserReply) String() string {
+func (x *GetSchedulesReply) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetByUserReply) ProtoMessage() {}
+func (*GetSchedulesReply) ProtoMessage() {}
 
-func (x *GetByUserReply) ProtoReflect() protoreflect.Message {
+func (x *GetSchedulesReply) ProtoReflect() protoreflect.Message {
 	mi := &file_schedule_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -329,12 +329,12 @@ func (x *GetByUserReply) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetByUserReply.ProtoReflect.Descriptor instead.
-func (*GetByUserReply) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetSchedulesReply.ProtoReflect.Descriptor instead.
+func (*GetSchedulesReply) Descriptor() ([]byte, []int) {
 	return file_schedule_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *GetByUserReply) GetScheduleIds() []int32 {
+func (x *GetSchedulesReply) GetScheduleIds() []int32 {
 	if x != nil {
 		return x.ScheduleIds
 	}
@@ -516,20 +516,20 @@ const file_schedule_proto_rawDesc = "" +
 	"\bduration\x18\x03 \x01(\rR\bduration\x12\x16\n" +
 	"\x06period\x18\x04 \x01(\x03R\x06period\"%\n" +
 	"\x13CreateScheduleReply\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x05R\x02id\"M\n" +
-	"\x13GetTimetableRequest\x12\x16\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\"L\n" +
+	"\x12GetScheduleRequest\x12\x16\n" +
 	"\x06userId\x18\x01 \x01(\x03R\x06userId\x12\x1e\n" +
 	"\n" +
 	"scheduleId\x18\x02 \x01(\x05R\n" +
-	"scheduleId\"s\n" +
-	"\x11GetTimetableReply\x12\x12\n" +
+	"scheduleId\"r\n" +
+	"\x10GetScheduleReply\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
 	"\x05endAt\x18\x02 \x01(\x03R\x05endAt\x12\x16\n" +
 	"\x06period\x18\x03 \x01(\x03R\x06period\x12\x1c\n" +
-	"\ttimetable\x18\x04 \x03(\x03R\ttimetable\"*\n" +
-	"\x10GetByUserRequest\x12\x16\n" +
-	"\x06userId\x18\x01 \x01(\x03R\x06userId\"2\n" +
-	"\x0eGetByUserReply\x12 \n" +
+	"\ttimetable\x18\x04 \x03(\x03R\ttimetable\"-\n" +
+	"\x13GetSchedulesRequest\x12\x16\n" +
+	"\x06userId\x18\x01 \x01(\x03R\x06userId\"5\n" +
+	"\x11GetSchedulesReply\x12 \n" +
 	"\vscheduleIds\x18\x01 \x03(\x05R\vscheduleIds\"/\n" +
 	"\x15GetNextTakingsRequest\x12\x16\n" +
 	"\x06userId\x18\x01 \x01(\x03R\x06userId\"N\n" +
@@ -542,11 +542,11 @@ const file_schedule_proto_rawDesc = "" +
 	"\x06period\x18\x04 \x01(\x03R\x06period\x12\x1e\n" +
 	"\n" +
 	"nextTaking\x18\x05 \x01(\x03R\n" +
-	"nextTaking2\xbd\x02\n" +
+	"nextTaking2\xc3\x02\n" +
 	"\bSchedule\x12P\n" +
-	"\x0eCreateSchedule\x12\x1f.schedule.CreateScheduleRequest\x1a\x1d.schedule.CreateScheduleReply\x12J\n" +
-	"\fGetTimetable\x12\x1d.schedule.GetTimetableRequest\x1a\x1b.schedule.GetTimetableReply\x12A\n" +
-	"\tGetByUser\x12\x1a.schedule.GetByUserRequest\x1a\x18.schedule.GetByUserReply\x12P\n" +
+	"\x0eCreateSchedule\x12\x1f.schedule.CreateScheduleRequest\x1a\x1d.schedule.CreateScheduleReply\x12G\n" +
+	"\vGetSchedule\x12\x1c.schedule.GetScheduleRequest\x1a\x1a.schedule.GetScheduleReply\x12J\n" +
+	"\fGetSchedules\x12\x1d.schedule.GetSchedulesRequest\x1a\x1b.schedule.GetSchedulesReply\x12P\n" +
 	"\x0eGetNextTakings\x12\x1f.schedule.GetNextTakingsRequest\x1a\x1d.schedule.GetNextTakingsReplyB\x18Z\x16schedule.v1;schedulev1b\x06proto3"
 
 var (
@@ -565,10 +565,10 @@ var file_schedule_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_schedule_proto_goTypes = []any{
 	(*CreateScheduleRequest)(nil),   // 0: schedule.CreateScheduleRequest
 	(*CreateScheduleReply)(nil),     // 1: schedule.CreateScheduleReply
-	(*GetTimetableRequest)(nil),     // 2: schedule.GetTimetableRequest
-	(*GetTimetableReply)(nil),       // 3: schedule.GetTimetableReply
-	(*GetByUserRequest)(nil),        // 4: schedule.GetByUserRequest
-	(*GetByUserReply)(nil),          // 5: schedule.GetByUserReply
+	(*GetScheduleRequest)(nil),      // 2: schedule.GetScheduleRequest
+	(*GetScheduleReply)(nil),        // 3: schedule.GetScheduleReply
+	(*GetSchedulesRequest)(nil),     // 4: schedule.GetSchedulesRequest
+	(*GetSchedulesReply)(nil),       // 5: schedule.GetSchedulesReply
 	(*GetNextTakingsRequest)(nil),   // 6: schedule.GetNextTakingsRequest
 	(*GetNextTakingsReply)(nil),     // 7: schedule.GetNextTakingsReply
 	(*GetNextTakingsReplyItem)(nil), // 8: schedule.GetNextTakingsReplyItem
@@ -576,12 +576,12 @@ var file_schedule_proto_goTypes = []any{
 var file_schedule_proto_depIdxs = []int32{
 	8, // 0: schedule.GetNextTakingsReply.items:type_name -> schedule.GetNextTakingsReplyItem
 	0, // 1: schedule.Schedule.CreateSchedule:input_type -> schedule.CreateScheduleRequest
-	2, // 2: schedule.Schedule.GetTimetable:input_type -> schedule.GetTimetableRequest
-	4, // 3: schedule.Schedule.GetByUser:input_type -> schedule.GetByUserRequest
+	2, // 2: schedule.Schedule.GetSchedule:input_type -> schedule.GetScheduleRequest
+	4, // 3: schedule.Schedule.GetSchedules:input_type -> schedule.GetSchedulesRequest
 	6, // 4: schedule.Schedule.GetNextTakings:input_type -> schedule.GetNextTakingsRequest
 	1, // 5: schedule.Schedule.CreateSchedule:output_type -> schedule.CreateScheduleReply
-	3, // 6: schedule.Schedule.GetTimetable:output_type -> schedule.GetTimetableReply
-	5, // 7: schedule.Schedule.GetByUser:output_type -> schedule.GetByUserReply
+	3, // 6: schedule.Schedule.GetSchedule:output_type -> schedule.GetScheduleReply
+	5, // 7: schedule.Schedule.GetSchedules:output_type -> schedule.GetSchedulesReply
 	7, // 8: schedule.Schedule.GetNextTakings:output_type -> schedule.GetNextTakingsReply
 	5, // [5:9] is the sub-list for method output_type
 	1, // [1:5] is the sub-list for method input_type

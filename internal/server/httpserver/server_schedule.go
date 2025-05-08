@@ -1,4 +1,4 @@
-package rest
+package httpserver
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"schedule/internal/domain/entity"
 	"schedule/internal/domain/value"
-	"schedule/internal/server/rest/models"
+	"schedule/pkg/rest"
 )
 
 type ScheduleUsecase interface {
@@ -31,7 +31,7 @@ func NewScheduleServer(schedule ScheduleUsecase, base Base) ScheduleServer {
 func (s *ScheduleServer) createSchedule(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	req := new(models.CreateScheduleRequest)
+	req := new(rest.CreateScheduleRequest)
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		s.writeAndLogErr(ctx, w, err, http.StatusBadRequest)
 		return

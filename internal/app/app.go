@@ -15,7 +15,7 @@ import (
 	"schedule/internal/config"
 	"schedule/internal/domain/usecase/schedule"
 	"schedule/internal/infrastructure/persistence/mysql"
-	"schedule/internal/server/rest"
+	"schedule/internal/server/httpserver"
 	"syscall"
 )
 
@@ -28,7 +28,7 @@ func Run(cfg *config.Config) {
 	shutdown := make(chan os.Signal, 2)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
-	db, err := mysql.Connect(cfg.Db)
+	db, err := mysql.Connect(cfg.MySQl)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -68,9 +68,9 @@ func Run(cfg *config.Config) {
 }
 
 func newHttpServer(l *slog.Logger, schedule *schedule.Usecase, cfg config.HttpServerConfig) *http.Server {
-	base := rest.NewBase(l)
-	restScheduleServer := rest.NewScheduleServer(schedule, base)
-	restServer := rest.NewServer(restScheduleServer, l, &cfg.Log)
+	base := httpserver.NewBase(l)
+	restScheduleServer := httpserver.NewScheduleServer(schedule, base)
+	restServer := httpserver.NewServer(restScheduleServer, l, &cfg.Log)
 
 	rtr := mux.NewRouter()
 	restServer.RegisterRoutes(rtr)

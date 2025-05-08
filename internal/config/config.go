@@ -2,13 +2,14 @@ package config
 
 import (
 	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/joho/godotenv"
 	"time"
 )
 
 type Config struct {
 	Schedule   ScheduleConfig   `yaml:"schedule"`
 	Log        LogConfig        `yaml:"log"`
-	Db         DbConfig         `yaml:"db"`
+	MySQl      MySqlConfig      `yaml:"mysql"`
 	HttpServer HttpServerConfig `yaml:"http_server"`
 	GrpcServer GrpcServerConfig `yaml:"grpc_server"`
 }
@@ -26,11 +27,11 @@ type LogConfig struct {
 	Format string `yaml:"format" env:"LOG_FORMAT" env-default:"json"`
 }
 
-type DbConfig struct {
-	Addr           string `yaml:"addr" env:"DB_ADDR" env-default:"localhost:3306"`
-	User           string `yaml:"user" env:"DB_USER" env-default:"root"`
-	Password       string `yaml:"password" env:"DB_PASSWORD" env-default:""`
-	Schema         string `yaml:"schema" env:"DB_SCHEMA" env-default:"public"`
+type MySqlConfig struct {
+	Addr           string `yaml:"addr" env:"MYSQL_ADDR" env-default:"localhost:3306"`
+	User           string `yaml:"user" env:"MYSQL_USER" env-default:"root"`
+	Password       string `yaml:"password" env:"MYSQL_PASSWORD" env-default:""`
+	Schema         string `yaml:"schema" env:"MYSQL_SCHEMA" env-default:"public"`
 	ConnectTimeout int    `yaml:"connect_timeout" env:"DB_CONNECT_TIMEOUT" env-default:"10"`
 }
 
@@ -53,7 +54,11 @@ type GrpcServerConfig struct {
 	Addr string `yaml:"addr" env:"GRPC_ADDR" env-default:"localhost:8081"`
 }
 
-func ReadConfig(path string) (*Config, error) {
+func ReadConfig(path string, dotenv ...string) (*Config, error) {
+	if err := godotenv.Load(dotenv...); err != nil {
+		return nil, err
+	}
+
 	cfg := new(Config)
 	if err := cleanenv.ReadConfig(path, cfg); err != nil {
 		return nil, err
