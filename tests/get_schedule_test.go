@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"schedule/internal/util"
 	"schedule/pkg/dbtest"
+	"schedule/pkg/errcodes"
 	schedulev1 "schedule/pkg/grpc"
 	"schedule/pkg/rest"
 	"time"
@@ -55,6 +56,17 @@ func (s *Suite) TestGetScheduleHTTP() {
 			},
 			expectedStatus: http.StatusOK,
 		},
+		{
+			name: "not found",
+			request: rest.GetScheduleParams{
+				UserId:     userId,
+				ScheduleId: -1,
+			},
+			expectedStatus: http.StatusNotFound,
+			expectedError: rest.ErrorResponse{
+				Error: errcodes.NotFound.String(),
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -72,11 +84,13 @@ func (s *Suite) TestGetScheduleHTTP() {
 
 			switch statusCode {
 			case http.StatusOK:
-				rq.EqualValues(tc.expectedResponse, *resp.JSON200)
+				rq.EqualValues(&tc.expectedResponse, resp.JSON200)
 			case http.StatusBadRequest:
-				rq.Equal(tc.expectedError, resp.JSON400)
+				rq.Equal(&tc.expectedError, resp.JSON400)
+			case http.StatusNotFound:
+				rq.Equal(&tc.expectedError, resp.JSON404)
 			case http.StatusInternalServerError:
-				rq.Equal(tc.expectedError, resp.JSON500)
+				rq.Equal(&tc.expectedError, resp.JSON500)
 			default:
 				rq.Errorf(errors.New("unexpected status code"), "Code: %d\n body: %s", statusCode, string(resp.Body))
 			}

@@ -7,6 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"schedule/internal/domain/entity"
 	"schedule/internal/domain/value"
+	"schedule/pkg/failure"
 )
 
 type ScheduleRepo struct {
@@ -22,7 +23,7 @@ func NewScheduleRepo(db *sqlx.DB) *ScheduleRepo {
 func (r *ScheduleRepo) Save(ctx context.Context, schedule *entity.Schedule) error {
 	res, err := r.db.NamedExecContext(ctx, "INSERT INTO schedule (user_id, name, end_at, period) VALUES (:user_id, :name, :end_at, :period)", schedule)
 	if err != nil {
-		return err
+		return failure.NewInternalError(err.Error())
 	}
 
 	id, err := res.LastInsertId()
@@ -34,11 +35,11 @@ func (r *ScheduleRepo) Save(ctx context.Context, schedule *entity.Schedule) erro
 	return nil
 }
 
-func (r *ScheduleRepo) GetByUser(ctx context.Context, userId value.UserId) ([]entity.Schedule, error) {
-	var schedules []entity.Schedule
+func (r *ScheduleRepo) GetByUser(ctx context.Context, userId value.UserId) ([]*entity.Schedule, error) {
+	var schedules []*entity.Schedule
 	if err := r.db.SelectContext(ctx, &schedules, "SELECT * FROM schedule WHERE user_id = ?", userId); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return schedules, nil
+			return schedules, failure.NewInternalError(err.Error())
 		}
 		return nil, err
 	}
@@ -49,7 +50,7 @@ func (r *ScheduleRepo) GetById(ctx context.Context, userId value.UserId, schedul
 	schedule := new(entity.Schedule)
 	if err := r.db.GetContext(ctx, schedule, "SELECT * FROM schedule WHERE user_id = ? AND id = ?", userId, scheduleId); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return schedule, nil
+			return nil, failure.NewNotFoundError(err.Error())
 		}
 		return nil, err
 	}

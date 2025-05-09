@@ -1,11 +1,11 @@
-package util
+package middlwarex
 
 import (
 	"math"
 	"unicode"
 )
 
-func JsonUnmarshal(p []byte) any {
+func jsonUnmarshal(p []byte) any {
 	v, _ := unmarshalValue(p)
 	return v
 }

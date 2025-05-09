@@ -16,6 +16,8 @@ import (
 	"schedule/internal/domain/usecase/schedule"
 	"schedule/internal/infrastructure/persistence/mysql"
 	"schedule/internal/server/httpserver"
+	"schedule/pkg/contextx"
+	"schedule/pkg/middlwarex"
 	"syscall"
 )
 
@@ -36,7 +38,7 @@ func Run(cfg *config.Config) {
 
 	scheduleRepo := mysql.NewScheduleRepo(db)
 
-	scheduleUsecase := schedule.NewUsecase(scheduleRepo, l, cfg.Schedule)
+	scheduleUsecase := schedule.NewUsecase(scheduleRepo, cfg.Schedule)
 
 	httpServer := newHttpServer(l, scheduleUsecase, cfg.HttpServer)
 	grpcServer := grpc_server.NewGrpcServer(l, scheduleUsecase)
@@ -68,12 +70,30 @@ func Run(cfg *config.Config) {
 }
 
 func newHttpServer(l *slog.Logger, schedule *schedule.Usecase, cfg config.HttpServerConfig) *http.Server {
-	base := httpserver.NewBase(l)
-	restScheduleServer := httpserver.NewScheduleServer(schedule, base)
-	restServer := httpserver.NewServer(restScheduleServer, l, &cfg.Log)
+	restScheduleServer := httpserver.NewScheduleServer(schedule)
+	restServer := httpserver.NewServer(restScheduleServer)
 
 	rtr := mux.NewRouter()
 	restServer.RegisterRoutes(rtr)
+
+	var sensitiveFields = []string{
+		"user_id", "user-id", "userid",
+	}
+
+	rtr.Use(
+		middlwarex.AddTraceId,
+		middlwarex.WithLocation,
+		middlwarex.NewLogRequest(&middlwarex.LogOptions{
+			MaxContentLen:   cfg.Log.MaxRequestContentLen,
+			LoggingContent:  cfg.Log.RequestLoggingContent,
+			SensitiveFields: sensitiveFields,
+		}),
+		middlwarex.NewLogResponse(&middlwarex.LogOptions{
+			MaxContentLen:   cfg.Log.MaxResponseContentLen,
+			LoggingContent:  cfg.Log.ResponseLoggingContent,
+			SensitiveFields: sensitiveFields,
+		}),
+	)
 
 	return &http.Server{
 		Handler:      rtr,
@@ -81,5 +101,8 @@ func newHttpServer(l *slog.Logger, schedule *schedule.Usecase, cfg config.HttpSe
 		ReadTimeout:  cfg.ReadTimeout,
 		WriteTimeout: cfg.WriteTimeout,
 		ErrorLog:     slog.NewLogLogger(l.Handler(), slog.LevelError),
+		BaseContext: func(net.Listener) context.Context {
+			return contextx.WithLogger(context.Background(), l)
+		},
 	}
 }

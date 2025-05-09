@@ -2,7 +2,6 @@ package tests
 
 import (
 	"bou.ke/monkey"
-	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/suite"
 	"golang.org/x/sys/windows"
@@ -53,7 +52,7 @@ func (s *Suite) SetupSuite() {
 
 	s.cfg, err = config.ReadConfig("../config/config.yaml", "../.env")
 	rq.NoError(err)
-	fmt.Printf("%+v\n", s.cfg)
+
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()

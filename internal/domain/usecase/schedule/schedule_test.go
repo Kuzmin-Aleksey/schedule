@@ -5,12 +5,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/stretchr/testify/require"
-	"log/slog"
-	"schedule/internal/app/logger"
 	"schedule/internal/config"
 	"schedule/internal/domain/entity"
 	"schedule/internal/domain/value"
 	"schedule/internal/util"
+	"schedule/pkg/contextx"
 	"testing"
 	"time"
 )
@@ -22,16 +21,7 @@ var testConfig = config.ScheduleConfig{
 	TimeRound:        time.Minute * 15,
 }
 
-var logConfig = config.LogConfig{
-	Level:  slog.LevelDebug.String(),
-	Format: "json",
-}
-
-var l *slog.Logger
-
 const testUser value.UserId = 1234567890123456
-
-var testSchedules []entity.Schedule
 
 func init() {
 	now := time.Date(2025, time.January, 1, 12, 0, 0, 0, time.UTC)
@@ -39,31 +29,29 @@ func init() {
 
 	time.Local = nil
 
-	var err error
-	l, err = logger.GetLogger(&logConfig)
-	if err != nil {
-		panic(err)
-	}
-	testSchedules = []entity.Schedule{
+}
+
+func getTestSchedules(loc *time.Location) []*entity.Schedule {
+	return []*entity.Schedule{
 		{
 			Id:     1,
 			UserId: testUser,
 			Name:   "Test Schedule 1",
-			EndAt:  value.NewScheduleEndAt(util.Ptr(date().Add(day))),
+			EndAt:  value.NewScheduleEndAt(util.Ptr(date(loc).Add(day + time.Hour*time.Duration(testConfig.EndDayHour)))),
 			Period: value.SchedulePeriod(time.Hour),
 		},
 		{
 			Id:     2,
 			UserId: testUser,
 			Name:   "Test Schedule 2",
-			EndAt:  value.NewScheduleEndAt(util.Ptr(date())),
+			EndAt:  value.NewScheduleEndAt(util.Ptr(date(loc).Add(time.Hour * time.Duration(testConfig.EndDayHour)))),
 			Period: value.SchedulePeriod(time.Hour * 12),
 		},
 		{
 			Id:     3,
 			UserId: testUser,
 			Name:   "Test Schedule 3",
-			EndAt:  value.NewScheduleEndAt(util.Ptr(date().Add(-day))),
+			EndAt:  value.NewScheduleEndAt(util.Ptr(date(loc).Add(-day + time.Hour*time.Duration(testConfig.EndDayHour)))),
 			Period: value.SchedulePeriod(time.Hour),
 		},
 		{
@@ -77,15 +65,13 @@ func init() {
 			Id:     5,
 			UserId: testUser,
 			Name:   "Test Schedule 5",
-			EndAt:  value.NewScheduleEndAt(util.Ptr(date().Add(day))),
+			EndAt:  value.NewScheduleEndAt(util.Ptr(date(loc).Add(day + time.Hour*time.Duration(testConfig.EndDayHour)))),
 			Period: value.SchedulePeriod(time.Duration(testConfig.EndDayHour-testConfig.BeginDayHour) * time.Hour),
 		},
 	}
 }
 
 func TestGetActualSchedulesIds(t *testing.T) {
-	uc := NewUsecase(nil, l, testConfig)
-
 	testCases := []struct {
 		Location *time.Location
 		Expected []value.ScheduleId
@@ -105,10 +91,11 @@ func TestGetActualSchedulesIds(t *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		ctx := context.Background()
-		now := time.Now().In(testCase.Location)
+		ctx := contextx.WithLocation(context.Background(), testCase.Location)
 
-		ids := uc.getActualSchedulesIds(ctx, testSchedules, now, testCase.Location)
+		testSchedules := getTestSchedules(testCase.Location)
+
+		ids := getActualSchedulesIds(ctx, testSchedules)
 
 		require.Equalf(t, testCase.Expected, ids, "test case: %d", i+1)
 	}
@@ -116,18 +103,19 @@ func TestGetActualSchedulesIds(t *testing.T) {
 }
 
 func TestGetSchedule(t *testing.T) {
-	testSchedules := []entity.Schedule{
+	testSchedules := getTestSchedules(time.UTC)
+	testSchedules = []*entity.Schedule{
 		testSchedules[0],
 		testSchedules[1],
 		testSchedules[3],
 		testSchedules[4],
-		{
-			Id:     6,
-			UserId: testUser,
-			Name:   "Test Schedule 6",
-			Period: value.SchedulePeriod(day),
-		},
 	}
+	testSchedules = append(testSchedules, &entity.Schedule{
+		Id:     6,
+		UserId: testUser,
+		Name:   "Test Schedule 6",
+		Period: value.SchedulePeriod(day),
+	})
 
 	expected := []value.ScheduleTimeTable{
 		{ // 0
@@ -172,24 +160,21 @@ func TestGetSchedule(t *testing.T) {
 			value.NewScheduleTimeTableItem(date().Add(time.Hour * 8)),
 			value.NewScheduleTimeTableItem(date().Add(time.Hour * 22)),
 		},
-		{
+		{ // 5
 			value.NewScheduleTimeTableItem(date().Add(time.Hour * 8)),
 		},
 	}
 
-	uc := NewUsecase(nil, l, testConfig)
-
 	for i, testSchedule := range testSchedules {
+		ctx := contextx.WithLocation(context.Background(), time.UTC)
 
-		resp := uc.makeTimetable(context.Background(), &testSchedule, time.Now(), time.UTC)
+		resp := makeTimetable(ctx, testSchedule, testConfig.BeginDayHour, testConfig.EndDayHour, testConfig.TimeRound)
 
 		require.Equalf(t, expected[i], resp, "test case: %d", i+1)
 	}
 }
 
 func TestGetNextTaking(t *testing.T) {
-	uc := NewUsecase(nil, l, testConfig)
-
 	testCases := []struct {
 		Location         *time.Location
 		NextTakingPeriod time.Duration
@@ -221,6 +206,7 @@ func TestGetNextTaking(t *testing.T) {
 		},
 	}
 
+	testSchedules := getTestSchedules(testCases[0].Location)
 	testCases[0].Expected = []entity.ScheduleNextTaking{
 		{
 			Id:         testSchedules[3].Id,
@@ -237,6 +223,8 @@ func TestGetNextTaking(t *testing.T) {
 			NextTaking: value.NewScheduleNextTaking(date(testCases[0].Location).Add(time.Hour*13 + time.Minute*0)),
 		},
 	}
+
+	testSchedules = getTestSchedules(testCases[1].Location)
 	testCases[1].Expected = []entity.ScheduleNextTaking{
 		{
 			Id:         testSchedules[0].Id,
@@ -253,6 +241,8 @@ func TestGetNextTaking(t *testing.T) {
 			NextTaking: value.NewScheduleNextTaking(date(testCases[1].Location).Add(time.Hour*9 + time.Minute*0)),
 		},
 	}
+
+	testSchedules = getTestSchedules(testCases[1].Location)
 	testCases[2].Expected = []entity.ScheduleNextTaking{
 		{
 			Id:         testSchedules[3].Id,
@@ -263,6 +253,8 @@ func TestGetNextTaking(t *testing.T) {
 		},
 	}
 	testCases[3].Expected = []entity.ScheduleNextTaking{}
+
+	testSchedules = getTestSchedules(testCases[4].Location)
 	testCases[4].Expected = []entity.ScheduleNextTaking{
 		{
 			Id:         testSchedules[0].Id,
@@ -286,6 +278,8 @@ func TestGetNextTaking(t *testing.T) {
 			NextTaking: value.NewScheduleNextTaking(date(testCases[4].Location).Add(time.Hour*8 + time.Minute*0 + day)),
 		},
 	}
+
+	testSchedules = getTestSchedules(testCases[5].Location)
 	testCases[5].Expected = []entity.ScheduleNextTaking{
 		{
 			Id:         testSchedules[3].Id,
@@ -362,20 +356,13 @@ func TestGetNextTaking(t *testing.T) {
 	}
 
 	for i, c := range testCases {
-		fmt.Printf("\nTast case %d\n\n", i+1)
+		fmt.Printf("\nTestGetNextTaking: Tast case %d\n\n", i+1)
 
-		for j, s := range c.Expected {
-			if !s.EndAt.IsNil() {
-				c.Expected[j].EndAt = value.NewScheduleEndAt(util.Ptr(time.Date(s.EndAt.Year(), s.EndAt.Month(), s.EndAt.Day(), testConfig.EndDayHour, 0, 0, 0, c.Location)))
-			}
-		}
+		testSchedules = getTestSchedules(c.Location)
 
-		uc.cfg.NextTakingPeriod = c.NextTakingPeriod
+		ctx := contextx.WithLocation(context.Background(), c.Location)
 
-		ctx := context.Background()
-		now := time.Now().In(c.Location)
-
-		resp := uc.findNextTakings(ctx, testSchedules, now, c.Location)
+		resp := findNextTakings(ctx, testSchedules, c.NextTakingPeriod, testConfig.BeginDayHour, testConfig.EndDayHour, testConfig.TimeRound)
 
 		require.Equalf(t, c.Expected, resp, "test case: %d", i+1)
 	}

@@ -30,13 +30,21 @@ func NewGrpcServer(l *slog.Logger, schedule *schedule.Usecase) *grpc.Server {
 	}
 
 	server := grpc.NewServer(grpc.ChainUnaryInterceptor(
+		addLoggerUnaryInterceptor(l),
 		traceIdUnaryInterceptor,
 		timezoneUnaryInterceptor,
 		recovery.UnaryServerInterceptor(recoveryOpts...),
 		logging.UnaryServerInterceptor(interceptorLog(l), loggingOpts...),
 	))
-	grpcserver.Register(server, schedule, l)
+	grpcserver.Register(server, schedule)
 	return server
+}
+
+func addLoggerUnaryInterceptor(l *slog.Logger) func(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+	return func(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+		ctx = contextx.WithLogger(ctx, l)
+		return handler(ctx, req)
+	}
 }
 
 func timezoneUnaryInterceptor(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
