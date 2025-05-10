@@ -1,8 +1,10 @@
 package config
 
 import (
+	"errors"
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/joho/godotenv"
+	"os"
 	"time"
 )
 
@@ -56,7 +58,9 @@ type GrpcServerConfig struct {
 
 func ReadConfig(path string, dotenv ...string) (*Config, error) {
 	if err := godotenv.Load(dotenv...); err != nil {
-		return nil, err
+		if !errors.Is(err, os.ErrNotExist) {
+			return nil, err
+		}
 	}
 
 	cfg := new(Config)
