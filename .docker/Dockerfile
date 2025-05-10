@@ -1,15 +1,38 @@
-FROM golang:latest as builder
-ARG CGO_ENABLED=0
+# Step 1: Modules caching
+FROM golang:1.24-alpine3.20 AS modules
+
+ENV \
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
+
+WORKDIR /modules
+
+COPY go.mod go.sum ./
+
+RUN go mod download
+
+# Step 2: Build a special service
+FROM golang:1.24-alpine3.20 AS builder
+
+ARG APP_NAME
+
+RUN \
+    apk update && \
+    apk add git
+
+COPY --from=modules /go/pkg /go/pkg
+COPY . /app
+
 WORKDIR /app
 
-COPY . .
-RUN go mod download
-RUN go build -o schedule cmd/schedule/main.go
+RUN go build --buildvcs=true -o /bin/app ./cmd/$APP_NAME
 
+# Step 3: Reduce the size as much as possible
 FROM scratch
+
+COPY --from=builder /bin/app /app
+COPY --from=modules /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=builder /app/config/config.yaml /config/config.yaml
-COPY --from=builder /app/schedule /schedule
 
-EXPOSE 8080
-
-ENTRYPOINT ["/schedule"]
+CMD ["/app"]
