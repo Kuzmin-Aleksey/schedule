@@ -86,7 +86,9 @@ func (s *Suite) TearDownSuite() {
 	rq := s.Require()
 
 	if runtime.GOOS == "windows" {
-		rq.NoError(windows.GenerateConsoleCtrlEvent(windows.CTRL_C_EVENT, 0)) // not work
+		// Работает только при запуске тестов из командной строки.
+		// Если запускать в IDE (goland), то app не получит сигнал и завершатся сами тесты, а IDE выведет "No tests were run"
+		rq.NoError(windows.GenerateConsoleCtrlEvent(windows.CTRL_C_EVENT, 0))
 	} else {
 		p, err := os.FindProcess(os.Getpid())
 		rq.NoError(err)
