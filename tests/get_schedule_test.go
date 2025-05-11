@@ -3,6 +3,8 @@ package tests
 import (
 	"context"
 	"errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"net/http"
 	"schedule/internal/util"
 	"schedule/pkg/dbtest"
@@ -138,6 +140,14 @@ func (s *Suite) TestGetScheduleGRPC() {
 					time.Date(2025, time.January, 1, 22, 0, 0, 0, time.UTC).Unix(),
 				},
 			},
+		},
+		{
+			name: "not found",
+			request: schedulev1.GetScheduleRequest{
+				UserId:     userId,
+				ScheduleId: -1,
+			},
+			expectedError: status.Error(codes.NotFound, "get schedule error"),
 		},
 	}
 
