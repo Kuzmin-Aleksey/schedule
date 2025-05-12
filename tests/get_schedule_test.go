@@ -117,7 +117,7 @@ func (s *Suite) TestGetScheduleGRPC() {
 		bootstrap        func()
 		request          schedulev1.GetScheduleRequest
 		expectedResponse schedulev1.GetScheduleReply
-		expectedError    error
+		expectedCode     codes.Code
 	}{
 		{
 			name: "success",
@@ -147,7 +147,7 @@ func (s *Suite) TestGetScheduleGRPC() {
 				UserId:     userId,
 				ScheduleId: -1,
 			},
-			expectedError: status.Error(codes.NotFound, "get schedule error"),
+			expectedCode: codes.NotFound,
 		},
 	}
 
@@ -158,10 +158,14 @@ func (s *Suite) TestGetScheduleGRPC() {
 			}
 
 			resp, err := s.grpcClient.GetSchedule(ctx, &tc.request)
-			if tc.expectedError != nil {
-				rq.Equal(tc.expectedError, err)
+
+			statusCode := status.Code(err)
+			rq.Equal(tc.expectedCode, statusCode)
+
+			if statusCode != codes.OK {
 				return
 			}
+
 			rq.NoError(err)
 
 			rq.Equal(tc.expectedResponse.GetName(), resp.GetName())

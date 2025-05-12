@@ -3,6 +3,8 @@ package tests
 import (
 	"context"
 	"errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"net/http"
 	"schedule/internal/util"
 	"schedule/pkg/dbtest"
@@ -105,7 +107,7 @@ func (s *Suite) TestGetNextTakingGRPC() {
 		bootstrap        func()
 		request          schedulev1.GetNextTakingsRequest
 		expectedResponse schedulev1.GetNextTakingsReply
-		expectedError    error
+		expectedCode     codes.Code
 	}{
 		{
 			name: "success",
@@ -147,10 +149,14 @@ func (s *Suite) TestGetNextTakingGRPC() {
 			}
 
 			resp, err := s.grpcClient.GetNextTakings(ctx, &tc.request)
-			if tc.expectedError != nil {
-				rq.Equal(tc.expectedError, err)
+
+			statusCode := status.Code(err)
+			rq.Equal(tc.expectedCode, statusCode)
+
+			if statusCode != codes.OK {
 				return
 			}
+
 			rq.NoError(err)
 
 			rq.Equal(len(tc.expectedResponse.GetItems()), len(resp.GetItems()))

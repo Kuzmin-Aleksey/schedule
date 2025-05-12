@@ -3,6 +3,8 @@ package tests
 import (
 	"context"
 	"errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"net/http"
 	"schedule/internal/domain/entity"
 	"schedule/internal/domain/value"
@@ -94,7 +96,7 @@ func (s *Suite) TestCreateScheduleGRPC() {
 		bootstrap        func()
 		request          schedulev1.CreateScheduleRequest
 		expectedResponse schedulev1.CreateScheduleReply
-		expectedError    error
+		expectedCode     codes.Code
 		expectedData     entity.Schedule
 	}{
 		{
@@ -121,10 +123,14 @@ func (s *Suite) TestCreateScheduleGRPC() {
 			}
 
 			resp, err := s.grpcClient.CreateSchedule(ctx, &tc.request)
-			if tc.expectedError != nil {
-				rq.Equal(tc.expectedError, err)
+
+			statusCode := status.Code(err)
+			rq.Equal(tc.expectedCode, statusCode)
+
+			if statusCode != codes.OK {
 				return
 			}
+
 			rq.NoError(err)
 
 			tc.expectedData.Id = value.ScheduleId(resp.GetId())
