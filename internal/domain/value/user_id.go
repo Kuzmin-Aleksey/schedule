@@ -24,3 +24,7 @@ func ParseUserId(s string) (UserId, error) {
 func (id UserId) LogValue() slog.Value {
 	return slog.StringValue("hidden")
 }
+
+func (id UserId) String() string {
+	return "hidden"
+}
