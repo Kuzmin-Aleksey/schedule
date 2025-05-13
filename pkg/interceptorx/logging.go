@@ -1,4 +1,4 @@
-package grpc_server
+package interceptorx
 
 import (
 	"context"
@@ -7,12 +7,15 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"log/slog"
 	"reflect"
+	"schedule/pkg/contextx"
 	"slices"
 	"strings"
 )
 
-func interceptorLog(l *slog.Logger) logging.Logger {
+func NewLoggingInterceptor(safeFields []string) logging.Logger {
 	return logging.LoggerFunc(func(ctx context.Context, level logging.Level, msg string, fields ...any) {
+		l := contextx.GetLoggerOrDefault(ctx)
+
 		for i, f := range fields {
 			if f == "grpc.request.content" || f == "grpc.response.content" {
 				c, err := deep.CopySkipUnsupported(fields[i+1])
@@ -20,7 +23,7 @@ func interceptorLog(l *slog.Logger) logging.Logger {
 					l.ErrorContext(ctx, "copy message failed", "err", err)
 					break
 				}
-				if err := hideSafeValues(c); err != nil {
+				if err := hideSafeValues(c, safeFields); err != nil {
 					l.ErrorContext(ctx, "hide safe fields failed", "err", err)
 				}
 				fields[i+1] = c
@@ -30,12 +33,7 @@ func interceptorLog(l *slog.Logger) logging.Logger {
 	})
 }
 
-var safeFields = []string{
-	"user_id",
-	"userid",
-}
-
-func hideSafeValues(s any) (err error) {
+func hideSafeValues(s any, safeFields []string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("%v", r)
@@ -78,7 +76,7 @@ func hideSafeValues(s any) (err error) {
 			if slices.Contains(safeFields, strings.ToLower(f.Name)) && v.CanSet() {
 				v.Set(reflect.Zero(f.Type))
 			} else {
-				if e := hideSafeValues(v); e != nil {
+				if e := hideSafeValues(v, safeFields); e != nil {
 					err = e
 				}
 			}
@@ -86,7 +84,7 @@ func hideSafeValues(s any) (err error) {
 
 	case reflect.Slice:
 		for i := 0; i < ps.Len(); i++ {
-			if e := hideSafeValues(ps.Index(i)); e != nil {
+			if e := hideSafeValues(ps.Index(i), safeFields); e != nil {
 				err = e
 			}
 		}
@@ -95,7 +93,7 @@ func hideSafeValues(s any) (err error) {
 			if slices.Contains(safeFields, strings.ToLower(k.String())) {
 				ps.SetMapIndex(k, reflect.Zero(ps.MapIndex(k).Type()))
 			} else {
-				if e := hideSafeValues(ps.MapIndex(k)); e != nil {
+				if e := hideSafeValues(ps.MapIndex(k), safeFields); e != nil {
 					err = e
 				}
 			}

@@ -4,19 +4,25 @@ import (
 	"context"
 	"errors"
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"log"
 	"log/slog"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
-	"schedule/internal/app/grpc_server"
 	"schedule/internal/app/logger"
 	"schedule/internal/config"
 	"schedule/internal/domain/usecase/schedule"
 	"schedule/internal/infrastructure/persistence/mysql"
+	"schedule/internal/server/grpcserver"
 	"schedule/internal/server/httpserver"
 	"schedule/pkg/contextx"
+	"schedule/pkg/interceptorx"
 	"schedule/pkg/middlwarex"
 	"syscall"
 )
@@ -41,7 +47,7 @@ func Run(cfg *config.Config) {
 	scheduleUsecase := schedule.NewUsecase(scheduleRepo, cfg.Schedule)
 
 	httpServer := newHttpServer(l, scheduleUsecase, cfg.HttpServer)
-	grpcServer := grpc_server.NewGrpcServer(l, scheduleUsecase)
+	grpcServer := newGrpcServer(l, scheduleUsecase)
 
 	go func() {
 		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -105,4 +111,32 @@ func newHttpServer(l *slog.Logger, schedule *schedule.Usecase, cfg config.HttpSe
 			return contextx.WithLogger(context.Background(), l)
 		},
 	}
+}
+
+func newGrpcServer(l *slog.Logger, schedule *schedule.Usecase) *grpc.Server {
+	loggingOpts := []logging.Option{
+		logging.WithLogOnEvents(
+			logging.PayloadReceived, logging.PayloadSent,
+		),
+	}
+	recoveryOpts := []recovery.Option{
+		recovery.WithRecoveryHandlerContext(func(ctx context.Context, p any) (err error) {
+			l.ErrorContext(ctx, "recovered panic ", "err", p)
+			return status.Error(codes.Internal, "internal error")
+		}),
+	}
+
+	safeField := []string{
+		"user_id", "userid",
+	}
+
+	server := grpc.NewServer(grpc.ChainUnaryInterceptor(
+		interceptorx.AddLoggerUnaryInterceptor(l),
+		interceptorx.TraceIdUnaryInterceptor,
+		interceptorx.TimezoneUnaryInterceptor,
+		recovery.UnaryServerInterceptor(recoveryOpts...),
+		logging.UnaryServerInterceptor(interceptorx.NewLoggingInterceptor(safeField), loggingOpts...),
+	))
+	grpcserver.Register(server, schedule)
+	return server
 }
