@@ -28,7 +28,7 @@ func (r *ScheduleRepo) Save(ctx context.Context, schedule *entity.Schedule) erro
 
 	id, err := res.LastInsertId()
 	if err != nil {
-		return err
+		return failure.NewInternalError(err.Error())
 	}
 	schedule.Id = value.ScheduleId(id)
 
@@ -39,9 +39,9 @@ func (r *ScheduleRepo) GetByUser(ctx context.Context, userId value.UserId) ([]*e
 	var schedules []*entity.Schedule
 	if err := r.db.SelectContext(ctx, &schedules, "SELECT * FROM schedule WHERE user_id = ?", userId); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return schedules, failure.NewInternalError(err.Error())
+			return schedules, nil
 		}
-		return nil, err
+		return nil, failure.NewInternalError(err.Error())
 	}
 	return schedules, nil
 }
@@ -52,7 +52,7 @@ func (r *ScheduleRepo) GetById(ctx context.Context, userId value.UserId, schedul
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, failure.NewNotFoundError(err.Error())
 		}
-		return nil, err
+		return nil, failure.NewInternalError(err.Error())
 	}
 	return schedule, nil
 }
