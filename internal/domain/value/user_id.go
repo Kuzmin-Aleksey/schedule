@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-type UserId int64
+type UserId int64 // med police 16 digits, always int64
 
 func ParseUserId(s string) (UserId, error) {
 	if s == "" {

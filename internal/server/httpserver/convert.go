@@ -1,19 +1,19 @@
 package httpserver
 
 import (
-	"schedule/internal/domain/entity"
+	"schedule/internal/domain/aggregate"
 	"schedule/internal/domain/value"
 	"schedule/pkg/rest"
 )
 
-func newDomainScheduleWithDuration(req *rest.CreateScheduleRequest) (*entity.ScheduleWithDuration, error) {
+func newDomainScheduleWithDuration(req *rest.CreateScheduleRequest) (*aggregate.ScheduleWithDuration, error) {
 	period, err := value.ParseSchedulePeriod(req.Period)
 	if err != nil {
 		return nil, err
 
 	}
 
-	return &entity.ScheduleWithDuration{
+	return &aggregate.ScheduleWithDuration{
 		UserId:   value.UserId(req.UserId),
 		Name:     value.ScheduleName(req.Name),
 		Duration: value.ScheduleDuration(req.Duration),
@@ -27,7 +27,7 @@ func newRESTCreateScheduleResponse(id value.ScheduleId) rest.CreateScheduleRespo
 	}
 }
 
-func newRESTScheduleResponse(timetable *entity.ScheduleTimetable) *rest.ScheduleResponse {
+func newRESTScheduleResponse(timetable *aggregate.ScheduleWithTimetable) *rest.ScheduleResponse {
 	return &rest.ScheduleResponse{
 		Id:        int(timetable.Id),
 		EndAt:     timetable.EndAt.NullableString(),
@@ -37,7 +37,7 @@ func newRESTScheduleResponse(timetable *entity.ScheduleTimetable) *rest.Schedule
 	}
 }
 
-func newRESTNextTakingResponse(schedules []entity.ScheduleNextTaking) []*rest.NextTakingResponse {
+func newRESTNextTakingResponse(schedules []aggregate.ScheduleNextTaking) []*rest.NextTakingResponse {
 	resp := make([]*rest.NextTakingResponse, len(schedules))
 
 	for i, t := range schedules {

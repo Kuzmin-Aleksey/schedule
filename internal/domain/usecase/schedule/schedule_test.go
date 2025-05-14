@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/require"
 	"schedule/internal/config"
+	"schedule/internal/domain/aggregate"
 	"schedule/internal/domain/entity"
 	"schedule/internal/domain/value"
 	"schedule/internal/util"
@@ -178,7 +179,7 @@ func TestGetNextTaking(t *testing.T) {
 	testCases := []struct {
 		Location         *time.Location
 		NextTakingPeriod time.Duration
-		Expected         []entity.ScheduleNextTaking
+		Expected         []aggregate.ScheduleNextTaking
 	}{
 		{
 			NextTakingPeriod: testConfig.NextTakingPeriod,
@@ -207,7 +208,7 @@ func TestGetNextTaking(t *testing.T) {
 	}
 
 	testSchedules := getTestSchedules(testCases[0].Location)
-	testCases[0].Expected = []entity.ScheduleNextTaking{
+	testCases[0].Expected = []aggregate.ScheduleNextTaking{
 		{
 			Id:         testSchedules[3].Id,
 			Name:       testSchedules[3].Name,
@@ -225,7 +226,7 @@ func TestGetNextTaking(t *testing.T) {
 	}
 
 	testSchedules = getTestSchedules(testCases[1].Location)
-	testCases[1].Expected = []entity.ScheduleNextTaking{
+	testCases[1].Expected = []aggregate.ScheduleNextTaking{
 		{
 			Id:         testSchedules[0].Id,
 			Name:       testSchedules[0].Name,
@@ -243,7 +244,7 @@ func TestGetNextTaking(t *testing.T) {
 	}
 
 	testSchedules = getTestSchedules(testCases[1].Location)
-	testCases[2].Expected = []entity.ScheduleNextTaking{
+	testCases[2].Expected = []aggregate.ScheduleNextTaking{
 		{
 			Id:         testSchedules[3].Id,
 			Name:       testSchedules[3].Name,
@@ -252,10 +253,10 @@ func TestGetNextTaking(t *testing.T) {
 			NextTaking: value.NewScheduleNextTaking(date(testCases[2].Location).Add(time.Hour*21 + time.Minute*30)),
 		},
 	}
-	testCases[3].Expected = []entity.ScheduleNextTaking{}
+	testCases[3].Expected = []aggregate.ScheduleNextTaking{}
 
 	testSchedules = getTestSchedules(testCases[4].Location)
-	testCases[4].Expected = []entity.ScheduleNextTaking{
+	testCases[4].Expected = []aggregate.ScheduleNextTaking{
 		{
 			Id:         testSchedules[0].Id,
 			Name:       testSchedules[0].Name,
@@ -280,7 +281,7 @@ func TestGetNextTaking(t *testing.T) {
 	}
 
 	testSchedules = getTestSchedules(testCases[5].Location)
-	testCases[5].Expected = []entity.ScheduleNextTaking{
+	testCases[5].Expected = []aggregate.ScheduleNextTaking{
 		{
 			Id:         testSchedules[3].Id,
 			Name:       testSchedules[3].Name,

@@ -2,6 +2,7 @@ package schedule
 
 import (
 	"context"
+	"schedule/internal/domain/aggregate"
 	"schedule/internal/domain/entity"
 	"schedule/internal/domain/value"
 	"schedule/internal/util"
@@ -54,7 +55,7 @@ func makeTimetable(ctx context.Context, schedule *entity.Schedule, beginDayHour,
 	return timetable
 }
 
-func findNextTakings(ctx context.Context, schedules []*entity.Schedule, period time.Duration, beginDayHour, endDayHour int, round time.Duration) []entity.ScheduleNextTaking {
+func findNextTakings(ctx context.Context, schedules []*entity.Schedule, period time.Duration, beginDayHour, endDayHour int, round time.Duration) []aggregate.ScheduleNextTaking {
 	l := contextx.GetLoggerOrDefault(ctx)
 
 	location := contextx.GetLocationOrDefault(ctx)
@@ -62,7 +63,7 @@ func findNextTakings(ctx context.Context, schedules []*entity.Schedule, period t
 
 	nextTakingPeriod := now.Add(period)
 
-	nextTakings := make([]entity.ScheduleNextTaking, 0) // if result is nil then write [] in json
+	nextTakings := make([]aggregate.ScheduleNextTaking, 0) // if result is nil then write [] in json
 
 	for _, schedule := range schedules {
 		l.DebugContext(ctx, "finding taking", "schedule", schedule)
@@ -93,7 +94,7 @@ func findNextTakings(ctx context.Context, schedules []*entity.Schedule, period t
 				}
 
 				if timestamp.After(now) {
-					nextTaking := entity.ScheduleNextTaking{
+					nextTaking := aggregate.ScheduleNextTaking{
 						Id:         schedule.Id,
 						Name:       schedule.Name,
 						EndAt:      schedule.EndAt,
@@ -103,7 +104,7 @@ func findNextTakings(ctx context.Context, schedules []*entity.Schedule, period t
 
 					l.DebugContext(ctx, "find next taking", "nextTaking", nextTaking)
 
-					nextTakings = util.InsertFunc(nextTakings, nextTaking, func(v entity.ScheduleNextTaking) bool { // make sorted result
+					nextTakings = util.InsertFunc(nextTakings, nextTaking, func(v aggregate.ScheduleNextTaking) bool { // make sorted result
 						return nextTaking.NextTaking.Before(v.NextTaking.Time)
 					})
 				}

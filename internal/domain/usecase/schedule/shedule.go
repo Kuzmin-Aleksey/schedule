@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"schedule/internal/config"
+	"schedule/internal/domain/aggregate"
 	"schedule/internal/domain/entity"
 	"schedule/internal/domain/value"
 	"schedule/internal/util"
@@ -32,7 +33,7 @@ func NewUsecase(repo Repo, cfg config.ScheduleConfig) *Usecase {
 	}
 }
 
-func (uc *Usecase) Create(ctx context.Context, dto *entity.ScheduleWithDuration) (value.ScheduleId, error) {
+func (uc *Usecase) Create(ctx context.Context, dto *aggregate.ScheduleWithDuration) (value.ScheduleId, error) {
 	const op = "schedule.Create"
 
 	l := contextx.GetLoggerOrDefault(ctx)
@@ -84,7 +85,7 @@ func (uc *Usecase) GetByUser(ctx context.Context, userId value.UserId) ([]value.
 	return ids, nil
 }
 
-func (uc *Usecase) GetTimetable(ctx context.Context, userId value.UserId, scheduleId value.ScheduleId) (*entity.ScheduleTimetable, error) {
+func (uc *Usecase) GetTimetable(ctx context.Context, userId value.UserId, scheduleId value.ScheduleId) (*aggregate.ScheduleWithTimetable, error) {
 	const op = "schedule.GetTimetable"
 
 	l := contextx.GetLoggerOrDefault(ctx)
@@ -99,7 +100,7 @@ func (uc *Usecase) GetTimetable(ctx context.Context, userId value.UserId, schedu
 
 	uc.setScheduleEndHour(location, []*entity.Schedule{schedule})
 
-	timetable := &entity.ScheduleTimetable{
+	timetable := &aggregate.ScheduleWithTimetable{
 		Id:        schedule.Id,
 		Name:      schedule.Name,
 		Period:    schedule.Period,
@@ -127,7 +128,7 @@ func (uc *Usecase) GetTimetable(ctx context.Context, userId value.UserId, schedu
 	return timetable, nil
 }
 
-func (uc *Usecase) GetNextTakings(ctx context.Context, userId value.UserId) ([]entity.ScheduleNextTaking, error) {
+func (uc *Usecase) GetNextTakings(ctx context.Context, userId value.UserId) ([]aggregate.ScheduleNextTaking, error) {
 	const op = "schedule.GetNextTakings"
 
 	l := contextx.GetLoggerOrDefault(ctx)

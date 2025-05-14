@@ -1,13 +1,13 @@
 package grpcserver
 
 import (
-	"schedule/internal/domain/entity"
+	"schedule/internal/domain/aggregate"
 	"schedule/internal/domain/value"
 	schedulev1 "schedule/pkg/grpc"
 )
 
-func newDomainScheduleWithDuration(req *schedulev1.CreateScheduleRequest) *entity.ScheduleWithDuration {
-	return &entity.ScheduleWithDuration{
+func newDomainScheduleWithDuration(req *schedulev1.CreateScheduleRequest) *aggregate.ScheduleWithDuration {
+	return &aggregate.ScheduleWithDuration{
 		UserId:   value.UserId(req.GetUserId()),
 		Name:     value.ScheduleName(req.GetName()),
 		Duration: value.ScheduleDuration(req.GetDuration()),
@@ -21,7 +21,7 @@ func newGRPCCreateScheduleReply(scheduleId value.ScheduleId) *schedulev1.CreateS
 	}
 }
 
-func newGRPCGetScheduleReply(timetable *entity.ScheduleTimetable) *schedulev1.GetScheduleReply {
+func newGRPCGetScheduleReply(timetable *aggregate.ScheduleWithTimetable) *schedulev1.GetScheduleReply {
 	grpcTimetable := make([]int64, len(timetable.Timetable))
 	for i, t := range timetable.Timetable {
 		grpcTimetable[i] = t.Unix()
@@ -50,7 +50,7 @@ func newGRPCGetSchedulesReply(ids []value.ScheduleId) *schedulev1.GetSchedulesRe
 	}
 }
 
-func newGRPCGetNextTakingsReply(schedules []entity.ScheduleNextTaking) *schedulev1.GetNextTakingsReply {
+func newGRPCGetNextTakingsReply(schedules []aggregate.ScheduleNextTaking) *schedulev1.GetNextTakingsReply {
 	grpcRespItems := make([]*schedulev1.GetNextTakingsReplyItem, len(schedules))
 
 	for i, item := range schedules {
